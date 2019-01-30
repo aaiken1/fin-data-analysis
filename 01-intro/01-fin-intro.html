@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 1: Introduction</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 1: Introduction
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+
+
+
+# Welcome!
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Why this course?
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/trojan.jpg" alt="Timeo professorum et dona ferentes" width="75%" /&gt;
+&lt;p class="caption"&gt;Timeo professorum et dona ferentes&lt;/p&gt;
+&lt;/div&gt;
+---
+
+class: inverse, center, middle
+
+# Our Goal: Powerful, reproducible data analysis
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+
+# Why this course?
+
+.question[
+What is data analysis? Why code? What does it mean to be "reproducible"?
+]
+
+--
+
+- Scriptability (coding) `\(\rightarrow\)` R
+- Literate programming (code, narrative, output in one place) `\(\rightarrow\)` R Markdown
+- A place to do this `\(\rightarrow\)` RStudio
+
+--
+
+What does this get us?
+- Learn how to import, summarize, graph, and analyze a variety of data, whether it is finance-related or not. Do things you just can't do in Excel. Let's expand what computers can do for us.
+- No *point and click* mystery. Analysis, tables, and figures are reproducible from the code and data.
+- More powerful tools, such as the tidyverse and finance-specific R *packages*.
+- The tools in this course are a stepping stone to things like *big data* and *machine learning*.
+- We will look at finance-specific topics, such as portfolio optimization, performance evaluation, housing prices, credit scores, volatility modeling, etc.
+---
+# Building a foundation
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/esb_construction_publicdomain.jpg" alt="Source: www.archdaily.com" width="75%" /&gt;
+&lt;p class="caption"&gt;Source: www.archdaily.com&lt;/p&gt;
+&lt;/div&gt;
+
+---
+
+
+# What is R/RStudio?
+
+- R is a statistical programming language
+- RStudio is a convenient interface for R (an *integrated development environment*, or IDE)
+- At its simplest:
+    - R is like a car’s engine
+    - RStudio is like a car’s dashboard
+--
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/rstudio.png" alt="The RStudio IDE" width="75%" /&gt;
+&lt;p class="caption"&gt;The RStudio IDE&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Why R/RStudio?
+
+&lt;img src="01-fin-intro_files/figure-html/indeeddotcom-1.png" width="1200" style="display: block; margin: auto;" /&gt;
+---
+
+# Why R/RStudio?
+
+.code-small[
+
+```r
+# The popularity data
+pop_df &lt;- 
+  data.frame(
+  lang = c("SQL", "Python", "R", "SAS", "Matlab", "SPSS", "Stata"),
+  n_jobs = c(107130, 66976, 48772, 25644, 11464, 3717, 1624),
+  free = c(T, T, T, F, F, F, F)
+  )
+## Plot it
+pop_df %&gt;% 
+  mutate(lang = lang %&gt;% factor(ordered = T)) %&gt;%
+  ggplot(aes(x = lang, y = n_jobs, fill = free)) +
+  geom_col() +
+  geom_hline(yintercept = 0) +
+  aes(x = reorder(lang, -n_jobs), fill = reorder(free, -free)) +
+  xlab("Statistical language") +
+  scale_y_continuous(label = scales::comma) +
+  ylab("Number of jobs") +
+  labs(
+    title = "Comparing statistical languages",
+    subtitle = "Number of job postings on Indeed.com, 2019/01/06",
+    caption = "Source: Grant McDermott | University of Oregon"
+    ) +
+  scale_fill_manual(
+    "Free?",
+    labels = c("True", "False"),
+    values = c("#f92672", "darkslategray")
+    ) +
+  ggthemes::theme_pander(base_size = 17) +
+  # theme_ipsum() +
+  theme(legend.position = "bottom")
+```
+]
+
+&gt; *The code that created these slides also created that graph.*
+
+---
+# Why R/RStudio?
+.code-small[
+
+```r
+data(managers)
+layout(rbind(c(1,2),c(3,4)))
+chart.Histogram(managers[,1,drop=F], main = "Plain", methods = NULL)
+chart.Histogram(managers[,1,drop=F], main = "Density", breaks=40, methods = c("add.density", "add.normal"))
+chart.Histogram(managers[,1,drop=F], main = "Skew and Kurt", methods = c ("add.centered", "add.rug"))
+chart.Histogram(managers[,1,drop=F], main = "Risk Measures", methods = c ("add.risk"))
+```
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="01-fin-intro_files/figure-html/perf-1.png" alt="PerformanceAnalytics Library" width="65%" /&gt;
+&lt;p class="caption"&gt;PerformanceAnalytics Library&lt;/p&gt;
+&lt;/div&gt;
+]
+---
+
+class: inverse, center, middle
+
+# Course structure and policies
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+
+# How are we going to learn?
+
+- Some lectures, lots of learn-by-doing. Weekly labs due on Mondays at 5pm.
+- The computers in our classroom have R installed. Bring a USB drive to save documents.
+- Bring your laptop to class every day. I want to make sure that you're comfortable with your own setup, as well as with the computers in the lab.
+- Online tutorials with videos and exercises via Datacamp. You will complete six different data camp modules and receive a certificate in *Basic R for Finance*. Sign-up via Moodle today!
+
+&lt;img src="img/datacamp2.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+# Our groundrules
+
+## Course components
+
+- **Team coding**. Form 2-3 person teams.
+- **Weekly Labs**. We will start these in class and can be completed with your teams, though you must each turn in your own work. Due by 5pm on Mondays. You are allowed one late assignment and can turn it in by Tuesday at 5pm. After that, I subtract 10 points for each 24 hours the assignment is late.
+- **Exams**. Our exams are completed individually and are take-home. There is a midterm and final. No late assignments are accepted without documented and exceptional circumstances.
+- **Final project.** This will be done in your team on a problem/topic of your choosing. This is your chance to extend what we've done in class, learn a new package, try new skills, etc.
+- **Datacamp**. Individual, exercises are graded based on XPs received. Grade floor of 75%.
+
+---
+# Our groundrules (cont.)
+
+
+## Grading
+&lt;br&gt;
+
+|  Item     | % of Final Grade | Due Date |
+| ----------- | ----------- |
+| Take-Home Midterm      | 25%       | 3/22 @ 5pm
+| 10 Lab Assignments   | 30% (3% each)        | Mondays @ 5pm |
+| Take-Home Final Exam   | 25%       | 5/17 @ 5pm
+| Group Project  | 15%       | 5/14 in class |
+| Datacamp Completion | 5%       | Varies
+
+
+
+---
+
+# Our groundrules (cont.)
+
+## Academic integrity
+
+- Only work that is clearly assigned as team work can be completed collaboratively. Your team may not share code with another team.
+- Use of disallowed materials, such as someone else's code, during the take home exams will result in a failing grade for the course.
+- If you use material from another source (e.g. Stackoverflow), you must cite this in your code.
+- Except for the take-home exams, you may discuss problems and ask for general advice (e.g. on our Moodle page). 
+
+--
+
+This course is **low stakes**, in the grand scheme of things. Use it as an opportunity to learn an important skill set!
+
+---
+
+# Getting our tools
+
+1. Download [R](https://www.r-project.org/).
+
+2. Download [RStudio](https://www.rstudio.com/products/rstudio/download/preview/).
+
+  Make sure you have the correct ones for your operating system.
+  
+  [https://stat545.com/block000_r-rstudio-install.html](https://stat545.com/block000_r-rstudio-install.html)
+
+--
+
+3. Get set up on [Datacamp](http://datacamp.com). Use the links on Moodle to access our course page.
+
+--
+
+4. Some useful links.
+
+  [Our main textbook](https://r4ds.had.co.nz). This is where our readings will come from.
+  
+  [Markdown syntax guide](https://www.markdownguide.org/basic-syntax)
+  
+  [Tidyverse](https://www.tidyverse.org). An "opinionated" set of R packages that extend the basic functionality, while making R easier to use. We will be using [dplyr](https://dplyr.tidyverse.org) and [ggplot](https://ggplot2.tidyverse.org) extensively. The former helps you manipulate your data, while the latter makes cool graphics.
+  
+  [Online version of DataViz](https://socviz.co). New textbook by [Prof. Kieran Healy at Duke](https://kieranhealy.org) on data visualization in R.
+
+---
+
+# Checklist for installation
+
+☑ Do you have the most recent version of R?
+  
+  ```r
+  version$version.string
+  ```
+  
+  ```
+  ## [1] "R version 3.5.2 (2018-12-20)"
+  ```
+
+
+☑ Do you have the most recent version of RStudio? (The [preview version](https://www.rstudio.com/products/rstudio/download/preview/) is fine.)
+  
+  ```r
+  RStudio.Version()$version
+  ## Requires an interactive session but should return something like "[1] ‘1.1.463’"
+  ```
+
+☑ Have you updated all of your R packages? 
+  
+  ```r
+  update.packages(ask = FALSE, checkBuilt = TRUE)
+  ```
+  
+☑ Have you signed-up for Datacamp?
+
+
+---
+
+# Tips for asking questions
+
+- Post your questions on Moodle. I have set up a discussion forum. Feel free to answer each other's questions!
+- Google your error messages. Check [Stack Overflow](https://stackoverflow.com). Someone has had your problem.
+- Come to office hours with specific questions in mind.
+- Give your question context from course concepts, not couse assignments.
+    - Good context: "I have a question on filtering."
+    - Bad context: "I have a question on Lab 2, Question 4"
+- Be precise in your description:
+    - Good description: "I am getting the following error and I'm not sure how to resolve it - `Error: could not find function "ggplot"`"
+    - Bad description: "R is broken, help me!"
+
+---
+
+class: inverse, center, middle
+
+# Using R for data analysis
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+
+    
+---
+
+# Let's take a tour - R / RStudio
+
+.center[
+![](img/demo.png)
+]
+
+Concepts introduced:
+
+- Console
+- Using R as a calculator
+- Environment
+- Loading and viewing a data frame
+- A first look at functions
+
+---
+
+# R essentials
+
+**Functions** let you do things, usually to your data. These are (most often) verbs, followed by what they will be applied to in parantheses:
+
+
+```r
+do_this(to_this)
+do_that(to_this, to_that, with_those)
+```
+
+--
+
+**Data frames** (or tibbles) are like a spreadsheet for our data. Columns (variables) in data frames are accessed with `$`:
+
+
+```r
+dataframe$var_name
+```
+
+--
+
+**Packages** let us add extra functionality to R. They are installed with the `install.packages` function and loaded with the `library` function, once per session:
+
+
+```r
+install.packages("package_name")
+library(package_name)
+```
+
+---
+
+# RStudio
+
+Download the [RStudio IDE cheatsheet.](https://www.rstudio.com/resources/cheatsheets/#ide). Let's go over the different window panes and how to get started.
+
+&lt;img src="img/rstudiocheat.png" width="90%" style="display: block; margin: auto;" /&gt;
+---
+
+# The R console in RStudio
+
+The R Console is accessible in the bottom left window of RStudio. This is where you can interact with R from the command line. You can also see the messages and warnings that R will give to you when you run your code. On a Mac, you can access Terminal from here.
+
+Go ahead and use R as a calculator. The `&lt;-` assigns 2 to X. You could use an `=`, but that is not very R-like.
+
+
+```r
+x &lt;- 2
+x * 2
+```
+
+```
+## [1] 4
+```
+
+Note that after you run this code, you'll see an `x` living in the global environment in the upper right window of RStudio. If you create a variable or add a data set to the global environment (e.g. by importing a CSV file), then it will appear here.
+
+---
+# RStudio
+
+The **console** is at the bottom. See [Chapter 4](https://r4ds.had.co.nz/workflow-basics.html) of our text. You write what we call scripts or notebooks at the top. This is the **editor**. See [Chapter 6](https://r4ds.had.co.nz/workflow-scripts.html).
+
+&lt;img src="img/scripts-console.png" width="60%" style="display: block; margin: auto;" /&gt;
+---
+
+
+# Loading and viewing a data frame
+
+Let's look at some data that comes installed with the `dplyr` package, part of the Tidyverse set of packages.
+
+.code-small[
+
+```r
+class(dplyr::starwars)
+```
+
+```
+## [1] "tbl_df"     "tbl"        "data.frame"
+```
+
+```r
+dplyr::starwars
+```
+
+```
+## # A tibble: 87 x 13
+##    name  height  mass hair_color skin_color eye_color birth_year gender
+##    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; 
+##  1 Luke…    172    77 blond      fair       blue            19   male  
+##  2 C-3PO    167    75 &lt;NA&gt;       gold       yellow         112   &lt;NA&gt;  
+##  3 R2-D2     96    32 &lt;NA&gt;       white, bl… red             33   &lt;NA&gt;  
+##  4 Dart…    202   136 none       white      yellow          41.9 male  
+##  5 Leia…    150    49 brown      light      brown           19   female
+##  6 Owen…    178   120 brown, gr… light      blue            52   male  
+##  7 Beru…    165    75 brown      light      blue            47   female
+##  8 R5-D4     97    32 &lt;NA&gt;       white, red red             NA   &lt;NA&gt;  
+##  9 Bigg…    183    84 black      light      brown           24   male  
+## 10 Obi-…    182    77 auburn, w… fair       blue-gray       57   male  
+## # … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;,
+## #   species &lt;chr&gt;, films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+
+# Loading and viewing a data frame
+
+Or, we can look at the `cars` data that comes installed with R. This data is used a lot in examples. The `head` function lets us look at just the first few rows of the data.
+
+
+```r
+class(cars)
+```
+
+```
+## [1] "data.frame"
+```
+
+```r
+head(cars)
+```
+
+```
+##   speed dist
+## 1     4    2
+## 2     4   10
+## 3     7    4
+## 4     7   22
+## 5     8   16
+## 6     9   10
+```
+
+---
+
+# Loading and viewing a data frame
+
+Finally, we can import our own data. [Chapter 11](https://r4ds.had.co.nz/data-import.html) of our text discusses how to import data a variety of ways. In this case, I'm going to import a CSV file with the Fama-French five factors. 
+
+
+
+```r
+ff &lt;- read_csv("data/ff.csv")
+```
+
+```
+## Parsed with column specification:
+## cols(
+##   date = col_double(),
+##   mktrf = col_double(),
+##   smb = col_double(),
+##   hml = col_double(),
+##   rmw = col_double(),
+##   cma = col_double(),
+##   rf = col_double()
+## )
+```
+
+
+---
+
+# Loading and viewing a data frame
+
+We can look at the last few rows of the data using the `tail` function. All of the columns are of data type `double` (dbl), which comes from computer science and is numeric. Note that the date is also a double, not an actual date!
+
+
+```r
+tail(ff)
+```
+
+```
+## # A tibble: 6 x 7
+##     date mktrf   smb   hml   rmw   cma    rf
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 201610 -2.02 -3.97  4.15  1.36  0.22  0.02
+## 2 201611  4.86  7.03  8.44 -0.68  3.83  0.01
+## 3 201612  1.81  0.32  3.52  0.95 -0.21  0.03
+## 4 201701  1.94 -1.25 -2.69  0.1  -0.95  0.04
+## 5 201702  3.57 -1.97 -1.8   0.5  -1.65  0.04
+## 6 201703  0.17  0.74 -3.32  0.76 -1.08  0.03
+```
+
+
+---
+
+# Loading and viewing a data frame
+
+Let's talk about paths and file names. The RMarkdown file (.Rmd) that created this HTML file is sitting in a folder called "01-Intro" on my computer. Inside that folder, there is another folder called "data". That is where I've put the ff.csv file that I've imported. But, this file resides in a larger R Project that I created. The home director for that project is fin469-materials. See the screen shot below.
+
+Note that I find my data with the path "data/ff.csv". This is the path **relative** to my .Rmd document. If you go under Knit at the top of the script editor, you will see an option for Knit Directory. I have chosen "Document Directory".
+
+&lt;img src="img/files2.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Function example. Linear regression.
+
+
+```r
+fit = lm(dist ~ 1 + speed, data = cars)
+summary(fit)
+```
+
+```
+## 
+## Call:
+## lm(formula = dist ~ 1 + speed, data = cars)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -29.069  -9.525  -2.272   9.215  43.201 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -17.5791     6.7584  -2.601   0.0123 *  
+## speed         3.9324     0.4155   9.464 1.49e-12 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 15.38 on 48 degrees of freedom
+## Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
+## F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
+```
+
+---
+
+# Base R plot
+
+
+```r
+par(mar = c(4, 4, 1, .1)) ## Just for nice plot margins on this slide deck
+plot(cars, pch = 19, col = 'darkgray', las = 1)
+abline(fit, lwd = 2)
+```
+
+&lt;img src="01-fin-intro_files/figure-html/cars_basefig-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+---
+
+# Let's plot something else
+We will use `ggplot`, part of the `tidyverse`.
+
+```r
+library(ggplot2)
+library(gapminder) ## For the gapminder data
+ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp)) + 
+  geom_point()
+```
+
+&lt;img src="01-fin-intro_files/figure-html/gapm_plot-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+--
+&gt; *That's kind of cool... I guess...*
+
+---
+
+# Let's plot something cool
+
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/gganim1-1.gif" alt="Source: Grant McDermott | University of Oregon" width="90%" /&gt;
+&lt;p class="caption"&gt;Source: Grant McDermott | University of Oregon&lt;/p&gt;
+&lt;/div&gt;
+
+---
+
+
+class: inverse, center, middle
+
+# R Markdown
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+
+
+# R Markdown
+
+- Fully reproducible reports -- each time you knit the analysis is ran from the beginning. Every assignment / report / project / etc. is an R Markdown document.
+- Simple markdown syntax for text
+- Code goes in chunks, defined by three backticks, narrative goes outside of chunks
+- [There are many resources for learning more about Markdown](https://rmarkdown.rstudio.com/authoring_quick_tour.html)
+- [Here's another](https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html)
+- You'll find a video on Moodle that discusses R Notebooks and Markdown.
+
+---
+
+# Let's take a tour - R Notebooks/Markdown
+
+
+.center[
+![](img/demo.png)
+]
+
+Concepts introduced:
+
+- Creating an R notebook
+- R Markdown and (some) R syntax
+- Previewing and Knitting documents
+- See 01-notebook-example.rmd for more
+
+---
+
+class: inverse, center, middle
+
+# For next class...
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+
+# Next up...
+
+Bookmark [our textbook](https://r4ds.had.co.nz), **R for Data Science**. [Hadley Wickham](https://twitter.com/hadleywickham) works at RStudio and is the main person behind the Tidyverse. Then, for next class, take a look at:
+
+- Chapter 1. Introduction. You'll learn more about this whole **tidy** thing, as well as some basics about R and RStudio.
+- Chatper 4. Brief intro to the R workflow in the **console**. Work through the examples.
+- Chapter 6. How to create R scripts. This is where, instead of typing your code in the console and hitting `return`, you use the **editor** in the upper left part of RStudio.
+- Chapter 8. Creating RStudio projects. You'll want to create a **project** for each lab, assignment, thing you work on that you want to keep.
+
+--
+
+Get R and RStudio up and running on you computer by following the instructions in these slides.
+
+--
+
+Set up a Datacamp account by following the link on Moodle.
+
+--
+
+[R/Finance 2018 Presentations](http://www.rinfinance.com/RinFinance2018/) and [RStudio Conference 2019](https://resources.rstudio.com/rstudio-conf-2019)
+
+--
+
+@hadleywickham, @minebocek, @juliasilge, @Rbloggers, @JennyBryan, @rstudio, @drob, @hspter 
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

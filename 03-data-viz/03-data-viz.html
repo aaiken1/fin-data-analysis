@@ -48,9 +48,10 @@ Chapter 3 of our text.
 
 - Data visualization is the creation and study of the visual representation of data.
 - There are many tools for visualizing data (R is one of them), and many approaches/systems within R for making data visualizations (**ggplot2** is one of them, and that's what we're going to use).
-- Read [Chapter 3](https://r4ds.had.co.nz/data-visualisation.html) of our textbook for a complete set of examples by the author of ggplot2.
-- These notes are based on the wonderful [Data Science in a Box](https://github.com/rstudio-education/datascience-box) course developed by RStudio and [Mine Çetinkaya-Rundel at Duke](https://www2.stat.duke.edu/~mc301/)
-- You can find the [ggplot2 cheat sheet here](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+- Read [Chapter 3](https://r4ds.had.co.nz/data-visualisation.html) of our textbook for a complete set of examples by the author of ggplot2. **Bookmark this page.**
+- Read [Chapters 3-5](https://socviz.co/makeplot.html#makeplot) of Data Visualization by Kieran Healy at Duke. **Bookmark this page.**
+- These notes are based on the wonderful [Data Science in a Box](https://github.com/rstudio-education/datascience-box) course developed by RStudio and [Mine Çetinkaya-Rundel, also at Duke](https://www2.stat.duke.edu/~mc301/)
+- You can find the [ggplot2 cheat sheet here.](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
 --
 
 
@@ -489,7 +490,20 @@ ggplot(data = ratios_2016, mapping = aes(x = roe_Median , y = bm_Median, size = 
 &lt;img src="03-data-viz_files/figure-html/unnamed-chunk-21-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
 
+---
 
+# Btm vs. ROE From 2010 - 2016 by GICS Industry
+.small[
+
+```r
+ggplot(data = ratios_gics, mapping = aes(x = roe_Median , y = bm_Median, color = gicdesc)) +
+  geom_point() +
+  labs(x = "ROE (Median)", y = "Book-to-Market (Median)", color = "Industry") + 
+  ggtitle("Relationship between BtM and ROE Across GICS 10 Industries")
+```
+
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-22-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+]
 
 
 ---
@@ -534,7 +548,7 @@ ggplot(data = starwars, mapping = aes(x = height, y = mass)) +
        x = "Height (cm)", y = "Weight (kg)")
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-22-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-23-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -548,26 +562,6 @@ Using a wrap gives you a little more space for category names.
 ggplot(data = ratios_gics, mapping = aes(y = pe_exi_Median, x=gpm_Median)) +
   facet_wrap(~ gicdesc, labeller = label_wrap_gen(width = 15, multi_line = TRUE)) + 
   geom_point()
-```
-
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-23-1.png" width="70%" style="display: block; margin: auto;" /&gt;
-]
-
-
----
-
-# A little more complicated...
-The function `qplot` would actually work better here.
-
-.small[
-
-```r
-ggplot(data = ratios_gics, mapping = aes(y = indret_vw, x=factor(0))) +
-  facet_grid(. ~ gicdesc, labeller = label_wrap_gen(width = 15, multi_line = TRUE)) + 
-  geom_boxplot() +
-    theme(axis.title.x=element_blank(),
-    axis.text.x=element_blank(),
-    axis.ticks.x=element_blank())
 ```
 
 &lt;img src="03-data-viz_files/figure-html/unnamed-chunk-24-1.png" width="70%" style="display: block; margin: auto;" /&gt;
@@ -684,6 +678,7 @@ ratios_gics %&gt;% filter(gicdesc %in% sectors ) %&gt;%
 
 &lt;img src="03-data-viz_files/figure-html/unnamed-chunk-28-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
+
 ---
 
 
@@ -705,6 +700,22 @@ ggplot(data = starwars, mapping = aes(y = height, x = gender)) +
 
 ---
 
+
+# Box plot of returns by sector
+Note that I flipped the coordinates to make things easier to read.
+
+.small[
+
+```r
+ggplot(data = ratios_gics, mapping = aes(y = indret_vw, x= gicdesc)) +
+* geom_boxplot() + coord_flip()
+```
+
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-30-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
 # Bar plots
 `geom_bar` is useful for **categorical** data.
 
@@ -715,7 +726,7 @@ ggplot(data = starwars, mapping = aes(x = gender)) +
   geom_bar()
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-30-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-31-1.png" width="75%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -729,7 +740,7 @@ ggplot(data = starwars, mapping = aes(x = gender, fill = hair_color)) +
   geom_bar()
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-31-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-32-1.png" width="75%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -744,7 +755,7 @@ ggplot(data = starwars, mapping = aes(x = gender, fill = hair_color)) +
   labs(y = "proportion")
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-32-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-33-1.png" width="75%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -772,7 +783,7 @@ ggplot(data = mpg, mapping = aes(x = class, fill = drv)) +
 * scale_fill_manual(values=wes_palette(name="Rushmore"))
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-33-1.png" width="55%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-34-1.png" width="55%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -790,7 +801,7 @@ ggplot(data = ratios_2016, mapping = aes(x = roe_Median , y = bm_Median)) +
   theme_economist()
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-34-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-35-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -810,7 +821,7 @@ library(ggthemes)
   theme_economist()
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-35-1.png" width="55%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-36-1.png" width="55%" style="display: block; margin: auto;" /&gt;
 ]
 
 

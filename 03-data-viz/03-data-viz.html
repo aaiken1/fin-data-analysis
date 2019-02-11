@@ -477,11 +477,12 @@ ggplot(data = starwars, mapping = aes(x = height, y = mass, color = gender)) +
 
 ---
 
-# Btm vs. ROE with Number of Firms in Industry
+# BtM vs. ROE in 2016
 .small[
 
 ```r
-ggplot(data = ratios_2016, mapping = aes(x = roe_Median , y = bm_Median, size = NFIRM)) +
+ggplot(data = ratios_2016, mapping = aes(x = roe_Median , 
+                          y = bm_Median, size = NFIRM)) +
   geom_point() +
   labs(x = "ROE (Median)", y = "Book-to-Market (Median)", size = "Number of Firms") + 
   ggtitle("Relationship between BtM and ROE Across FF48")
@@ -492,7 +493,7 @@ ggplot(data = ratios_2016, mapping = aes(x = roe_Median , y = bm_Median, size = 
 
 ---
 
-# Btm vs. ROE From 2010 - 2016 by GICS Industry
+# BtM vs. ROE From 2010 - 2016
 .small[
 
 ```r
@@ -560,11 +561,11 @@ Using a wrap gives you a little more space for category names.
 
 ```r
 ggplot(data = ratios_gics, mapping = aes(y = pe_exi_Median, x=gpm_Median)) +
-  facet_wrap(~ gicdesc, labeller = label_wrap_gen(width = 15, multi_line = TRUE)) + 
+  facet_wrap(~ gicdesc, labeller = label_wrap_gen(multi_line = TRUE)) + 
   geom_point()
 ```
 
-&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-24-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="03-data-viz_files/figure-html/unnamed-chunk-24-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 
 
@@ -813,7 +814,8 @@ You can assign them with `&lt;-` and then work with them in stages. Remember, `g
 
 ```r
 library(ggthemes)
-*ratio_plot &lt;- ggplot(data = ratios_2016, mapping = aes(x = roe_Median , y = bm_Median)) +
+ratio_plot &lt;- ggplot(data = ratios_2016, 
+*         mapping = aes(x = roe_Median , y = bm_Median)) +
   geom_point() 
 *ratio_plot + labs(x = "ROE (Median)", y = "Book-to-Market (Median)") +
   ggtitle("Relationship between BtM and ROE Across FF48", 

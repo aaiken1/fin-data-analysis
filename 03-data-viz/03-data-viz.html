@@ -497,7 +497,8 @@ ggplot(data = ratios_2016, mapping = aes(x = roe_Median ,
 .small[
 
 ```r
-ggplot(data = ratios_gics, mapping = aes(x = roe_Median , y = bm_Median, color = gicdesc)) +
+ggplot(data = ratios_gics, mapping = aes(x = roe_Median , 
+          y = bm_Median, color = gicdesc)) +
   geom_point() +
   labs(x = "ROE (Median)", y = "Book-to-Market (Median)", color = "Industry") + 
   ggtitle("Relationship between BtM and ROE Across GICS 10 Industries")

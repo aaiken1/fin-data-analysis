@@ -491,6 +491,7 @@ ggplot(data = ratios_2016, mapping = aes(x = roe_Median ,
 ]
 
 ---
+<<<<<<< HEAD
 
 # BtM vs. ROE From 2010 - 2016
 .small[
@@ -503,6 +504,20 @@ ggplot(data = ratios_gics, mapping = aes(x = roe_Median ,
        y = "Book-to-Market (Median)", color = "Industry") 
 ```
 
+=======
+
+# BtM vs. ROE From 2010 - 2016
+.small[
+
+```r
+ggplot(data = ratios_gics, mapping = aes(x = roe_Median , 
+          y = bm_Median, color = gicdesc)) +
+  geom_point() +
+  labs(x = "ROE (Median)", y = "Book-to-Market (Median)", color = "Industry") + 
+  ggtitle("Relationship between BtM and ROE Across GICS 10 Industries")
+```
+
+>>>>>>> e542221a9295969876136d7787bef8368c6d890e
 &lt;img src="03-data-viz_files/figure-html/unnamed-chunk-22-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
 

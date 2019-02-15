@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 4: Data Wrangling in the Tidyverse</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 4: Data Wrangling in the Tidyverse
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+
+
+
+# Making our data usable
+(Data wrangling using **dplyr**, part of the **tidyverse**)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project. Then do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec4.r`. Add the data files to your `data` folder that lives in the course folder. Then, run the code below at the top of your R Script to get started.
+
+.small[
+
+```r
+# install.package("tidyverse")
+library(tidyverse)
+ncbreweries &lt;- read_csv("data/ncbreweries.csv")
+```
+
+--
+
+If you are familiar with pivot tables in Excel, a lot of what we're about to do is the "code" for slicing and dicing your data in a similar fashion. The end goal is often to get our data set up for some type of statistical analysis, creating a plot, etc.
+
+---
+
+# What is tidy data?
+
+&gt;Happy families are all alike; every unhappy family is unhappy in its own way. 
+&gt;
+&gt;Leo Tolstoy
+
+--
+
+.pull-left[
+**Characteristics of tidy data:**
+
+- Each variable forms a column.
+- Each observation forms a row.
+- Each type of observational unit forms a table.
+]
+--
+.pull-right[
+**Characteristics of untidy data:**
+
+!@#$%^&amp;*()
+]
+
+---
+
+# Tidyverse vs. base R
+
+The tidyverse is a series of packages that work well together and will help you get your data "tidy". There is a "tidyverse vs. base R" debate. 
+
+--
+
+Many R users think that you should [learn the tidyverse first](http://varianceexplained.org/r/teach-tidyverse/). I agree.
+- The documentation and community support are outstanding.
+- Having a consistent philosophy and syntax makes it much easier to learn.
+- For data cleaning, wrangling and plotting... the tidyverse is really a no-brainer.
+
+--
+
+However, many finance-specific R packages assume that you know Base R. So, that's we've covered some of the basics there too. You'll see lots of Base R in the Datacamp videos.
+
+- Base R is extremely flexible and powerful (esp. when combined with other libraries).
+- There are some things that you'll have to venture outside of the tidyverse for.
+- A combination of tidyverse and base R is often the best solution to a problem.
+
+---
+
+# Tidyverse vs. base R (cont.)
+
+One point of convenience is that there is often a direct correspondence between a tidyverse command and its base R equivalent. 
+
+These invariably follow a `tidyverse::snake_case` vs `base::period.case` rule. E.g. see:
+- `?readr::read_csv` vs `?utils::read.csv`
+- `?tibble::data_frame`vs `?base::data.frame`
+- `?dplyr::if_else` vs `?base::ifelse`
+- etc.
+  
+If you call up the above examples, you'll see that the tidyverse alternative typically offers some enhancements or other useful options (and sometimes restrictions) over its base counterpart.
+- Remember: There are always many ways to achieve a single goal in R.
+
+---
+
+class: inverse, center, middle
+# Pipes
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+
+---
+
+# Where does the name come from?
+
+The pipe operator is implemented in the package **magrittr**, it's pronounced 
+"and then".
+
+.pull-left[
+![pipe](img//magritte.jpg)
+]
+.pull-right[
+![magrittr](img//magrittr.jpg)
+]
+
+---
+
+# How does a pipe work?
+
+You can think about the following sequence of actions - find key, 
+unlock car, start car, drive to school, park.
+
+Expressed as a set of nested functions in R pseudocode this would look like:
+
+```r
+park(drive(start_car(find("keys")), to = "campus"))
+```
+Writing it out using pipes give it a more natural (and easier to read) 
+structure:
+
+```r
+find("keys") %&gt;%
+  start_car() %&gt;%
+  drive(to = "campus") %&gt;%
+  park()
+```
+
+---
+
+# How does a pipe work? (cont.)
+
+The pipe operator is denoted `%&gt;%` and is automatically loaded with the tidyverse.
+  
+Pipes **dramatically** improve the experience of reading and writing code. Here's another example:
+
+
+```r
+## These next two lines of code do exactly the same thing.
+mpg %&gt;% filter(manufacturer=="audi") %&gt;% group_by(model) %&gt;% summarise(hwy_mean = mean(hwy))
+summarise(group_by(filter(mpg, manufacturer=="audi"), model), hwy_mean = mean(hwy))
+```
+
+--
+
+The first line reads from left to right, exactly how I thought of the operations in my head. 
+- Take this object (mpg), do this (filter), then do this (group by), etc.
+
+The second line totally inverts this logical order (the final operation comes first!) 
+- Who wants to read things inside out?
+
+---
+
+# How does a pipe work? (cont.)
+
+The piped version of the code is even more readable if we write it over several lines. Here it is again and, this time, I'll run it for good measure so you can see the output:
+
+
+```r
+mpg %&gt;% 
+  filter(manufacturer=="audi") %&gt;% 
+  group_by(model) %&gt;% 
+  summarise(hwy_mean = mean(hwy))
+```
+
+```
+## # A tibble: 3 x 2
+##   model      hwy_mean
+##   &lt;chr&gt;         &lt;dbl&gt;
+## 1 a4             28.3
+## 2 a4 quattro     25.8
+## 3 a6 quattro     24
+```
+
+Remember: Using vertical space costs nothing and makes for much more readable/writeable code than cramming things horizontally.
+
+---
+
+# What about other arguments?
+
+To send results to a function argument other than first one or to use the previous result for multiple arguments, use `.`:
+
+
+```r
+starwars %&gt;%
+  filter(species == "Human") %&gt;%
+  lm(mass ~ height, data = .)
+```
+
+```
+## 
+## Call:
+## lm(formula = mass ~ height, data = .)
+## 
+## Coefficients:
+## (Intercept)       height  
+##     -116.58         1.11
+```
+
+---
+
+class: inverse, center, middle
+# Data Wrangling
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+
+
+# NC Breweries
+
+View the names of variables in a data frame/tibble via the `names` function. We can also use `glimpse`. 
+
+There are many ways to peak at our data. You can double click on the data in the Global Environment to see the whole thing like a spreadsheet. This is the same as the `view` function.
+
+.code-small[
+
+```r
+names(ncbreweries)
+```
+
+```
+## [1] "name"      "city"      "type"      "beercount" "est"       "status"   
+## [7] "url"
+```
+
+```r
+glimpse(ncbreweries)
+```
+
+```
+## Observations: 251
+## Variables: 7
+## $ name      &lt;chr&gt; "217 Brew Works", "3rd Rock Brewing Company", "7 Clans…
+## $ city      &lt;chr&gt; "Wilson", "Trenton", "Cherokee", "Andrews", "Elkin", "…
+## $ type      &lt;chr&gt; "Microbrewery", "Microbrewery", "Client Brewer", "Micr…
+## $ beercount &lt;dbl&gt; 10, 12, 1, 18, 8, 78, 15, 87, 106, 59, 16, 29, 16, 6, …
+## $ est       &lt;dbl&gt; 2017, 2016, 2018, 2014, 2017, 2013, 2017, 2003, 2011, …
+## $ status    &lt;chr&gt; "Active", "Active", "Active", "Active", "Active", "Act…
+## $ url       &lt;chr&gt; "https://www.ratebeer.com//brewers/217-brew-works/3090…
+```
+]
+
+---
+
+# A Grammar of Data Manipulation
+
+**dplyr** is based on the concepts of functions as verbs that manipulate data frames.
+
+.pull-left[
+![](img/dplyr-part-of-tidyverse.png)
+]
+.pull-right[
+.midi[
+- `filter`: pick rows matching criteria
+- `slice`: pick rows using index(es)
+- `select`: pick columns by name
+- `pull`: grab a column as a vector
+- `arrange`: reorder rows
+- `mutate`: add new variables
+- `distinct`: filter for unique rows
+- `sample_n` / `sample_frac`: randomly sample rows
+- `summarise`: reduce variables to values
+- ... (many more)
+]
+]
+
+---
+
+# **dplyr** rules for functions
+
+- First argument is *always* a data frame
+- Subsequent arguments say what to do with that data frame
+- Always return a data frame
+- This won't change the original data frame unless you tell it to.
+
+- The `%&gt;%` operator in **dplyr** functions is called the pipe operator. This means you "pipe" the output of the previous line of code as the first input of the next line of code.
+- The `+` operator in **ggplot2** functions is used for "layering". This means you create the plot in layers, separated by `+`.
+
+---
+
+# 1) dplyr::filter to select a subset of rows
+
+Let's find breweries in Durham County.
+
+
+```r
+ncbreweries %&gt;%
+* filter(city == "Durham")
+```
+
+```
+## # A tibble: 9 x 7
+##   name          city  type     beercount   est status url                  
+##   &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;        &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                
+## 1 Barrel Cultu… Durh… Microbr…        29  2017 Active https://www.ratebeer…
+## 2 Bull City Bu… Durh… Brewpub…        64  2011 Active https://www.ratebeer…
+## 3 Bull City Ci… Durh… Commerc…         9  2014 Active https://www.ratebeer…
+## 4 Bull Durham … Durh… Microbr…         7  2015 Active https://www.ratebeer…
+## 5 Durty Bull B… Durh… Microbr…        19  2016 Active https://www.ratebeer…
+## 6 Fullsteam Br… Durh… Microbr…       131  2009 Active https://www.ratebeer…
+## 7 Ponysaurus B… Durh… Microbr…        26  2013 Active https://www.ratebeer…
+## 8 G2B Gastropu… Durh… Brewpub…        18  2015 Closed https://www.ratebeer…
+## 9 Triangle Bre… Durh… Microbr…        21  2007 Closed https://www.ratebeer…
+```
+
+---
+
+# 1) dplyr::filter for many conditions 
+Let's find breweries in Durham that were founded in 2014.
+
+
+```r
+ncbreweries %&gt;%
+  filter(city == "Durham", est == 2014)
+```
+
+```
+## # A tibble: 1 x 7
+##   name       city   type      beercount   est status url                   
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;         &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 
+## 1 Bull City… Durham Commerci…         9  2014 Active https://www.ratebeer.…
+```
+---
+
+# 1) dplyr::filter for missing values
+
+A very common `filter()` use case is identifying (or removing) missing data cases. `is.na` returns a logical vector (i.e. a bunch of TRUE and FALSE) that will be TRUE if a value of the column referenced is missing/not available.
+
+
+```r
+ncbreweries %&gt;% 
+  filter(is.na(city))
+```
+
+```
+## # A tibble: 0 x 7
+## # … with 7 variables: name &lt;chr&gt;, city &lt;chr&gt;, type &lt;chr&gt;, beercount &lt;dbl&gt;,
+## #   est &lt;dbl&gt;, status &lt;chr&gt;, url &lt;chr&gt;
+```
+--
+
+To remove missing observations, simply use negation: `filter(!is.na(city))`. This data set doesn't have any missing city values.
+
+---
+# 1) dplyr::filter and regex 
+
+`regex` (or Regular Expressions) is just a series of commands to deal with strings/text/characters. Here's one basic example. `filter` is looking for a True/False from the arguments inside. `grepl` returns True if the name column contains the string "Bear" anywhere in it. 
+
+
+```r
+ncbreweries %&gt;% 
+  filter(grepl("Bear", name))
+```
+
+```
+## # A tibble: 2 x 7
+##   name        city    type    beercount   est status url                   
+##   &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 
+## 1 Bear Creek… Bear C… Microb…         6  2012 Active https://www.ratebeer.…
+## 2 BearWaters… Canton  Microb…        39  2012 Active https://www.ratebeer.…
+```
+
+---
+
+# Logical operators in R
+
+operator    | definition                   || operator     | definition
+------------|------------------------------||--------------|----------------
+`&lt;`         | less than                    ||`x`&amp;nbsp;&amp;#124;&amp;nbsp;`y`     | `x` OR `y` 
+`&lt;=`        |	less than or equal to        ||`is.na(x)`    | test if `x` is `NA`
+`&gt;`         | greater than                 ||`!is.na(x)`   | test if `x` is not `NA`
+`&gt;=`        |	greater than or equal to     ||`x %in% y`    | test if `x` is in `y`
+`==`        |	exactly equal to             ||`!(x %in% y)` | test if `x` is not in `y`
+`!=`        |	not equal to                 ||`!x`          | not `x`
+`x &amp; y`     | `x` AND `y`                  ||              |
+
+---
+
+# 2) dplyr::select to keep variables
+
+
+```r
+ncbreweries %&gt;%
+  filter(city == "Durham", beercount &gt; 10) %&gt;%
+  select(name, type)
+```
+
+```
+## # A tibble: 7 x 2
+##   name                                type           
+##   &lt;chr&gt;                               &lt;chr&gt;          
+## 1 Barrel Culture Brewing and Blending Microbrewery   
+## 2 Bull City Burger and Brewery        Brewpub/Brewery
+## 3 Durty Bull Brewing Company          Microbrewery   
+## 4 Fullsteam Brewery                   Microbrewery   
+## 5 Ponysaurus Brewing Co.              Microbrewery   
+## 6 G2B Gastropub &amp; Brewery             Brewpub/Brewery
+## 7 Triangle Brewing Company            Microbrewery
+```
+
+---
+
+# 2) dplyr::select to exclude variables
+The `-` means "select everything but".
+
+```r
+ncbreweries %&gt;%
+  select(-type)
+```
+
+```
+## # A tibble: 251 x 6
+##    name          city     beercount   est status url                       
+##    &lt;chr&gt;         &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                     
+##  1 217 Brew Wor… Wilson          10  2017 Active https://www.ratebeer.com/…
+##  2 3rd Rock Bre… Trenton         12  2016 Active https://www.ratebeer.com/…
+##  3 7 Clans Brew… Cherokee         1  2018 Active https://www.ratebeer.com/…
+##  4 Andrews Brew… Andrews         18  2014 Active https://www.ratebeer.com/…
+##  5 Angry Troll … Elkin            8  2017 Active https://www.ratebeer.com/…
+##  6 Appalachian … Boone           78  2013 Active https://www.ratebeer.com/…
+##  7 Archetype Br… Ashevil…        15  2017 Active https://www.ratebeer.com/…
+##  8 Asheville Br… Ashevil…        87  2003 Active https://www.ratebeer.com/…
+##  9 Ass Clown Br… Corneli…       106  2011 Active https://www.ratebeer.com/…
+## 10 Aviator Brew… Fuquay …        59  2008 Active https://www.ratebeer.com/…
+## # … with 241 more rows
+```
+
+---
+
+# 2) dplyr::select a range of variables
+
+You can use "first:last" for consecutive columns, or just list out the columns separated by commas. 
+
+
+```r
+ncbreweries %&gt;%
+  select(city:beercount)
+```
+
+```
+## # A tibble: 251 x 3
+##    city          type          beercount
+##    &lt;chr&gt;         &lt;chr&gt;             &lt;dbl&gt;
+##  1 Wilson        Microbrewery         10
+##  2 Trenton       Microbrewery         12
+##  3 Cherokee      Client Brewer         1
+##  4 Andrews       Microbrewery         18
+##  5 Elkin         Microbrewery          8
+##  6 Boone         Microbrewery         78
+##  7 Asheville     Microbrewery         15
+##  8 Asheville     Brewpub              87
+##  9 Cornelius     Microbrewery        106
+## 10 Fuquay Varina Microbrewery         59
+## # … with 241 more rows
+```
+
+---
+
+# 2) dplyr::select to rename columns
+
+The new name goes first.
+
+
+```r
+ncbreweries %&gt;%
+  select(town=city)
+```
+
+```
+## # A tibble: 251 x 1
+##    town         
+##    &lt;chr&gt;        
+##  1 Wilson       
+##  2 Trenton      
+##  3 Cherokee     
+##  4 Andrews      
+##  5 Elkin        
+##  6 Boone        
+##  7 Asheville    
+##  8 Asheville    
+##  9 Cornelius    
+## 10 Fuquay Varina
+## # … with 241 more rows
+```
+
+---
+# 2) dplyr::select with a pattern
+
+The `select(contains(PATTERN))` option provides a nice shortcut in relevant cases. Another example of using text. Only one variable contains "type" in this case.
+
+```r
+ncbreweries %&gt;% 
+  select(name, contains("type"))
+```
+
+```
+## # A tibble: 251 x 2
+##    name                         type         
+##    &lt;chr&gt;                        &lt;chr&gt;        
+##  1 217 Brew Works               Microbrewery 
+##  2 3rd Rock Brewing Company     Microbrewery 
+##  3 7 Clans Brewing              Client Brewer
+##  4 Andrews Brewing Company      Microbrewery 
+##  5 Angry Troll Brewing          Microbrewery 
+##  6 Appalachian Mountain Brewery Microbrewery 
+##  7 Archetype Brewing            Microbrewery 
+##  8 Asheville Brewing Company    Brewpub      
+##  9 Ass Clown Brewing Company    Microbrewery 
+## 10 Aviator Brewing Company      Microbrewery 
+## # … with 241 more rows
+```
+
+---
+# 2) dplyr::select everything
+
+The `select(..., everything())` option is another useful shortcut if you only want to bring some variable(s) to the "front" of a data frame.
+
+
+```r
+ncbreweries %&gt;% 
+  select(name, beercount, everything())
+```
+
+```
+## # A tibble: 251 x 7
+##    name        beercount city    type      est status url                  
+##    &lt;chr&gt;           &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                
+##  1 217 Brew W…        10 Wilson  Microb…  2017 Active https://www.ratebeer…
+##  2 3rd Rock B…        12 Trenton Microb…  2016 Active https://www.ratebeer…
+##  3 7 Clans Br…         1 Cherok… Client…  2018 Active https://www.ratebeer…
+##  4 Andrews Br…        18 Andrews Microb…  2014 Active https://www.ratebeer…
+##  5 Angry Trol…         8 Elkin   Microb…  2017 Active https://www.ratebeer…
+##  6 Appalachia…        78 Boone   Microb…  2013 Active https://www.ratebeer…
+##  7 Archetype …        15 Ashevi… Microb…  2017 Active https://www.ratebeer…
+##  8 Asheville …        87 Ashevi… Brewpub  2003 Active https://www.ratebeer…
+##  9 Ass Clown …       106 Cornel… Microb…  2011 Active https://www.ratebeer…
+## 10 Aviator Br…        59 Fuquay… Microb…  2008 Active https://www.ratebeer…
+## # … with 241 more rows
+```
+
+---
+
+# 3) dplyr::slice for certain row numbers
+
+First five observations of the tibble.
+
+
+```r
+ncbreweries %&gt;%
+  slice(1:5)
+```
+
+```
+## # A tibble: 5 x 7
+##   name        city   type    beercount   est status url                    
+##   &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                  
+## 1 217 Brew W… Wilson Microb…        10  2017 Active https://www.ratebeer.c…
+## 2 3rd Rock B… Trent… Microb…        12  2016 Active https://www.ratebeer.c…
+## 3 7 Clans Br… Chero… Client…         1  2018 Active https://www.ratebeer.c…
+## 4 Andrews Br… Andre… Microb…        18  2014 Active https://www.ratebeer.c…
+## 5 Angry Trol… Elkin  Microb…         8  2017 Active https://www.ratebeer.c…
+```
+
+---
+
+# 3) dplyr::slice for certain row numbers
+
+Last five observations of the tibble.
+
+
+```r
+last_row &lt;- nrow(ncbreweries)
+ncbreweries %&gt;%
+  slice((last_row - 4):last_row)
+```
+
+```
+## # A tibble: 5 x 7
+##   name            city   type    beercount   est status url                
+##   &lt;chr&gt;           &lt;chr&gt;  &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;              
+## 1 Sweet Taters    Rocky… Brewpu…         9  2016 Closed https://www.ratebe…
+## 2 Triangle Brewi… Durham Microb…        21  2007 Closed https://www.ratebe…
+## 3 White Rabbit B… Angier Microb…        19  2013 Closed https://www.ratebe…
+## 4 Williamsville … Farmv… Brewpub         5  2000 Closed https://www.ratebe…
+## 5 Wolf Beer Comp… Wilmi… Client…         2  2009 Closed https://www.ratebe…
+```
+
+---
+
+# 4) dplyr::pull to extract a column
+
+Pull will extract the column as a vector. You can then save it to your global environment using `&lt;-`.
+.small[
+
+```r
+ncbreweries %&gt;%
+  slice(1:3) %&gt;%
+  pull(beercount)
+```
+
+```
+## [1] 10 12  1
+```
+]
+vs.
+.small[
+
+```r
+ncbreweries %&gt;%
+  slice(1:3) %&gt;%
+  select(beercount)
+```
+
+```
+## # A tibble: 3 x 1
+##   beercount
+##       &lt;dbl&gt;
+## 1        10
+## 2        12
+## 3         1
+```
+]
+
+---
+
+# 5) sample_n / sample_frac
+
+`sample_n`: randomly sample 5 observations
+
+
+```r
+ncbreweries_n5 &lt;- ncbreweries %&gt;%
+  sample_n(5, replace = FALSE)
+dim(ncbreweries_n5)
+```
+
+```
+## [1] 5 7
+```
+
+`sample_frac`: randomly sample 20% of observations
+
+
+```r
+ncbreweries_perc20 &lt;-ncbreweries %&gt;%
+  sample_frac(0.2, replace = FALSE)
+dim(ncbreweries_perc20)
+```
+
+```
+## [1] 50  7
+```
+
+---
+
+# 6) dplyr::distinct to filter for unique rows
+
+And `arrange` to sort columns. Character columns get sorted alphabetically. We can also arrange items in descending order using `arrange(desc())`.
+
+
+```r
+ncbreweries %&gt;% 
+  select(city, type) %&gt;% 
+  distinct() %&gt;% 
+  arrange(type, city)
+```
+
+```
+## # A tibble: 138 x 2
+##    city          type   
+##    &lt;chr&gt;         &lt;chr&gt;  
+##  1 Andrews       Brewpub
+##  2 Arden         Brewpub
+##  3 Asheville     Brewpub
+##  4 Boone         Brewpub
+##  5 Chapel Hill   Brewpub
+##  6 Charlotte     Brewpub
+##  7 Farmville     Brewpub
+##  8 Fayetteville  Brewpub
+##  9 Fuqauy Varina Brewpub
+## 10 Greenville    Brewpub
+## # … with 128 more rows
+```
+
+---
+
+# 7) dplyr::summarise for calculations
+
+`dplyr::summarise` let's us calculate things like means, medians, standard deviations, etc.
+
+
+```r
+ncbreweries %&gt;%
+  summarise(avg_beercount = mean(beercount))
+```
+
+```
+## # A tibble: 1 x 1
+##   avg_beercount
+##           &lt;dbl&gt;
+## 1          33.0
+```
+
+---
+
+# 7) dplyr::summarise by groups
+
+You can do calculations **by group** using `ddplyr::group_by`. This is very common and basically like creating pivot tables in Excel. Use `ungroup()` after performing the work in the groups to prevent mistakes later on.
+
+
+```r
+ncbreweries %&gt;%
+  group_by(type) %&gt;%
+  summarise(avg_beercount = mean(beercount)) %&gt;%
+  ungroup()
+```
+
+```
+## # A tibble: 5 x 2
+##   type               avg_beercount
+##   &lt;chr&gt;                      &lt;dbl&gt;
+## 1 Brewpub                     44.9
+## 2 Brewpub/Brewery             37.7
+## 3 Client Brewer                5  
+## 4 Commercial Brewery          10.7
+## 5 Microbrewery                31.3
+```
+
+---
+
+# 7) dplyr::summarise with na.rm
+Note that including "na.rm = T" is usually a good idea with summarise functions. Otherwise, any missing value will propogate to the summarised value too.
+
+
+```r
+## Probably not what we want
+starwars %&gt;% 
+  summarise(mean_height = mean(height))
+```
+
+```
+## # A tibble: 1 x 1
+##   mean_height
+##         &lt;dbl&gt;
+## 1          NA
+```
+
+```r
+## Much better
+starwars %&gt;% 
+  summarise(mean_height = mean(height, na.rm = T))
+```
+
+```
+## # A tibble: 1 x 1
+##   mean_height
+##         &lt;dbl&gt;
+## 1        174.
+```
+
+---
+
+# 7) dplyr::summarise with "scopes""
+
+There are "scoped" variants that also work with `summarise()`
+- `summarise_all()` affects every variable
+- `summarise_at()` affects named or selected variables
+- `summarise_if()` affects variables that meet some criteria (e.g. are numeric)
+
+An example using the latter:
+
+
+```r
+ncbreweries %&gt;% 
+  group_by(type) %&gt;% 
+  summarise_if(is.numeric, funs(avg=mean), na.rm=T) %&gt;%
+  head(5)
+```
+
+```
+## # A tibble: 5 x 3
+##   type               beercount_avg est_avg
+##   &lt;chr&gt;                      &lt;dbl&gt;   &lt;dbl&gt;
+## 1 Brewpub                     44.9   2010.
+## 2 Brewpub/Brewery             37.7   2013.
+## 3 Client Brewer                5     2010.
+## 4 Commercial Brewery          10.7   2016 
+## 5 Microbrewery                31.3   2012.
+```
+
+
+---
+
+# 8) dplyr::count observations
+
+
+```r
+ncbreweries %&gt;%
+  count(type)
+```
+
+```
+## # A tibble: 5 x 2
+##   type                   n
+##   &lt;chr&gt;              &lt;int&gt;
+## 1 Brewpub               33
+## 2 Brewpub/Brewery       41
+## 3 Client Brewer          9
+## 4 Commercial Brewery     3
+## 5 Microbrewery         165
+```
+
+---
+
+# 8) dplyr::count observations in groups
+
+You can also count pairs. 
+
+```r
+ncbreweries %&gt;% 
+  count(city, type)
+```
+
+```
+## # A tibble: 138 x 3
+##    city      type                n
+##    &lt;chr&gt;     &lt;chr&gt;           &lt;int&gt;
+##  1 Aberdeen  Microbrewery        1
+##  2 Andrews   Brewpub             1
+##  3 Andrews   Microbrewery        2
+##  4 Angier    Microbrewery        2
+##  5 Apex      Brewpub/Brewery     1
+##  6 Apex      Microbrewery        2
+##  7 Arden     Brewpub             1
+##  8 Asheboro  Microbrewery        1
+##  9 Asheville Brewpub             5
+## 10 Asheville Brewpub/Brewery     5
+## # … with 128 more rows
+```
+
+
+---
+
+# 9) dplyr::mutate to add new variables
+You will usually be creating a new variable from existing data. *Note:* `mutate()` is order aware. So you can chain multiple mutates in a single call. In other words, creat a new variable and then use it to create the next variable.
+
+
+```r
+ncbreweries %&gt;%
+  mutate(est_category = case_when(
+    est &lt; 2000       ~ "old",
+    est &gt;= 2000     ~ "New"
+  )) %&gt;%
+  count(est_category)
+```
+
+```
+## # A tibble: 2 x 2
+##   est_category     n
+##   &lt;chr&gt;        &lt;int&gt;
+## 1 New            241
+## 2 old             10
+```
+
+---
+# 9) dplyr::mutate to add new variables
+
+Other ways to get at the same thing. Note that different methods create different types of variables.
+
+```r
+ncbreweries %&gt;% 
+  mutate(new = est &gt;= 2000) %&gt;%
+  mutate(est_category = ifelse(est &gt;= 2000, "New", "Old")) 
+```
+
+```
+## # A tibble: 251 x 9
+##    name    city   type  beercount   est status url       new   est_category
+##    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;     &lt;lgl&gt; &lt;chr&gt;       
+##  1 217 Br… Wilson Micr…        10  2017 Active https://… TRUE  New         
+##  2 3rd Ro… Trent… Micr…        12  2016 Active https://… TRUE  New         
+##  3 7 Clan… Chero… Clie…         1  2018 Active https://… TRUE  New         
+##  4 Andrew… Andre… Micr…        18  2014 Active https://… TRUE  New         
+##  5 Angry … Elkin  Micr…         8  2017 Active https://… TRUE  New         
+##  6 Appala… Boone  Micr…        78  2013 Active https://… TRUE  New         
+##  7 Archet… Ashev… Micr…        15  2017 Active https://… TRUE  New         
+##  8 Ashevi… Ashev… Brew…        87  2003 Active https://… TRUE  New         
+##  9 Ass Cl… Corne… Micr…       106  2011 Active https://… TRUE  New         
+## 10 Aviato… Fuqua… Micr…        59  2008 Active https://… TRUE  New         
+## # … with 241 more rows
+```
+
+```r
+## Same effect, but can choose labels
+```
+
+---
+
+# "Saving" your tidy tibble
+
+Once you've filtered, mutated, arranged, etc., you likely want to save the resulting data frame, often by writing over the original data frame. You can also change the name and keep a new copy. **But - this file is not being saved to your computer, just in your global environment.**
+
+
+```r
+ncbreweries &lt;- ncbreweries %&gt;% 
+  mutate(new = est &gt;= 2000) %&gt;%
+  mutate(est_category = ifelse(est &gt;= 2000, "New", "Old"))
+```
+
+
+---
+
+# For next class...
+
+- The Intro to the `Tidyverse` Datacamp module is due Monday 2/25 at 11:59pm.
+- Lab #2 covering these `dplyr` functions and more is also due Monday 2/25 at 11:59pm.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

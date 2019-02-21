@@ -536,14 +536,14 @@ counter-reset: subitem;
 <div id="creating-a-new-tibble" class="section level2">
 <h2>Creating a new tibble</h2>
 <ol start="2" style="list-style-type: decimal">
-<li>Create a new tibble from our main data file that contains: date, price, square foot of living space, year sold, and price per squarefoot. Name that tibble: <strong>housing_subset</strong>.</li>
+<li>Create a new tibble from our main data file that contains: date (date sold), price, square foot of living space, year built, number of bedrooms, and price per squarefoot (note that you need to create this!). Name that tibble: <strong>housing_subset</strong>.</li>
 </ol>
 </div>
 <div id="what-are-the-ten-most-expensive-houses-sold-in-this-data" class="section level2">
 <h2>What are the ten most expensive houses sold in this data?</h2>
 <p><label for="tufte-mn-6" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-6" class="margin-toggle"><span class="marginnote"><span style="display: block;">The <code>desc</code> function specifies that we want <code>unemployment_rate</code> in descending order.</span></span></p>
 <ol start="3" style="list-style-type: decimal">
-<li>To answer this question, we need to arrange the data in <em>descending</em> order by housing price. Using what you’ve learned so far, arrange your new tibble in descending order with respect to housing prices. Show only the top 10 homes by adding <code>head(10)</code> at the end of the pipeline.</li>
+<li>To answer this question, we need to arrange the data in <em>descending</em> order by housing price. Using what you’ve learned so far, arrange your new tibble in descending order with respect to housing prices. Show only the top 10 homes by adding <code>head(10)</code> at the end of the pipeline. <strong>Do not do this step when you are creating the new tibble housing_subset, or you will only keep the first ten observations.</strong> Instead, use housing_subset as your initial tibble and then use pipes to get you the data that you want to show.</li>
 </ol>
 <p>Note that <code>head()</code> used this way is just displaying the first 10 rows of data. The rest of your data is still there. Try <code>tail()</code> too and see what happens.</p>
 </div>
@@ -624,7 +624,7 @@ scale_y_continuous(labels = scales::comma) +</code></pre>
 <a class="sourceLine" id="cb15-4" data-line-number="4"><span class="st">  </span><span class="kw">arrange</span>(___)</a></code></pre></div>
 <ol start="13" style="list-style-type: decimal">
 <li><p>Create a table that counts the number observations by number of bedrooms. To answer this question, use the <code>count</code> function, which first groups the data and then counts the number of observations in each category. Arrange the results so that the number of bedrooms with the fewest observations is on top. Do any observations look like outliers?</p></li>
-<li><p>Finally, let’s put a few of these <code>dplyr</code> commands together to create a more complicated summary table. Take your tibble and group the data by the year the house was built and the quantile of living space that you created. Then, use <code>summarise</code> to create a table with the count, the mean, and the standard deviation of the price per square foot within each year and quantile group. This table will be very large, since the first house was built in 1900! So, filter your data so that only the years 2014 and 2015 are shown.</p></li>
+<li><p>Finally, let’s put a few of these <code>dplyr</code> commands together to create a more complicated summary table. Take your tibble and group the data by the year the house was built and the quantile of living space that you created. Then, use <code>summarise</code> to create a table with the count, the mean, and the standard deviation of the price per square foot within each year and quantile group. This table will be very large, since the first house was built in 1900! So, filter your data so that only the years 2014 and 2015 for year built are shown.</p></li>
 </ol>
 <p>Do you notice any relationship between the standard deviation and the observation count?</p>
 <p>Take a second to really think about this workflow. Your data frame contains all observations. Then, you group by certain categories. Note that it wouldn’t make sense to group by something like price per square foot. You would need to create a discrete category first. The <code>summarise</code> function from <code>dplyr</code> then outputs a table that contains the summary statstics that you ask for. You could save this summary table as a tibble using <code>&lt;-</code> if you wanted to. In this case, we just need the output. The <code>filter</code> function lets us keep only the observations that we want.</p>

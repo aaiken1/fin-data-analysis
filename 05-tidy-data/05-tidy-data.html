@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 5: Tidy Data</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 5: Tidy Data
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+# Working with real data
+(Exploratory Data Analysis and "tidying" up)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project. Then do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec5.r`. Add the data files to your `data` folder that lives in the course folder. Then, run the code below at the top of your R Script to get started.
+
+
+```r
+library(tidyverse)
+pb &lt;- read_csv("data/low_relative_PB.csv")
+etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+```
+The first data set is a ready-made Factset screen that I ran. This screen finds companies that trade on U.S. exchanges that have a market cap &gt; $1B, have low P/CF, high interest coverage ratios, and are paying out FCF. These firm characteristics might be related to future returns. Note that these data are a **snapshot** in time.
+
+The second data set contains ETF prices **over time**.
+---
+
+class: inverse, center, middle
+# Exploring our data
+(Chapter 7. Concepts and tools.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Exploring our data in the `tidyverse`
+
+**Chapter 7** doesn't really introduce many new tools. Instead, you should focus on some of the questions that you'll want to ask your data.
+
+"EDA is not a formal process with a strict set of rules. More than anything, EDA is a state of mind. During the initial phases of EDA you should feel free to investigate every idea that occurs to you. Some of these ideas will pan out, and some will be dead ends. As your exploration continues, you will home in on a few particularly productive areas that you’ll eventually write up and communicate to others."
+
+Two important questions to ask of your data:
+
+- What type of variation occurs within my variables?
+
+- What type of covariation occurs between my variables?
+
+You can answer these questions a variety of ways, some simple (e.g. correlation), while others are more complex (e.g. linear regression). In economics and finance, we are often looking for **causal** interpretations (i.e. X causes Y). Take econometrics to learn about that.
+---
+# Our stock screen
+
+
+```
+## Observations: 182
+## Variables: 8
+## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT"…
+## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc…
+## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, …
+## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, …
+## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, …
+## $ industry        &lt;chr&gt; "Real Estate Investment Trusts", "Food: Major Di…
+## $ roe             &lt;chr&gt; "1.4", "11.6", "6.9", "9.9", "0.9", "16.5", "4.5…
+## $ roic            &lt;chr&gt; "0.9", "4.1", "3.4", "6.1", "0.8", "7.8", "2.2",…
+```
+
+**I have not told you how any of these variables are calculated.** Of course, you should know the basic formulas (e.g. P/B and ROE). But, what were the details of the calculations? Over what time period was net income measured to get ROE? Which book value of equity was used for P/B? You should want to know this - don't take data for granted! Only in textbooks can you get away with not asking these questions.
+
+--
+
+"The Price to Book value ratio is the current price divided by the latest quarterly Book Value Per Share. The Book Value Per Share is lagged 45 days by default for the formula."
+
+---
+# A Little About Factors
+One of our variables, *industry*, is a character variable. This makes sense for something like the name of the firm. However, *industry* is really a category variable. How can we tell R to treat it like a category? We need to use what R calls **factors**. Our industry data got read in as text, but we want R to recognize that it is more than that. We will use the `forcats` package (part of the `tidyverse`) to do this. See [https://r4ds.had.co.nz/factors.html](Chapter 15 for much more).
+
+Let's turn the character variable into a factor using `forcats::factor`.
+
+
+```r
+pb_clean &lt;- pb %&gt;%
+  mutate(industry = factor(industry))
+```
+
+
+---
+# Cleaning up missing values
+
+Did you see how *ROE* and *ROIC* got brought in as &lt;chr&gt; strings? Strange! But - Factset uses "#N/A" to denote missing values. `read_csv` saw these and thought that they were text, so it treated the whole variable as text. Let's fix this.
+
+`dplyr::na_if` swaps out whatever value you give it for true NAs. `as.numeric` tells R to treat the column as a numerical value. With the real NA values in place, the whole column is actually numeric, so R can do this switch. The fancy term for this is **type coercion**. 
+
+
+```r
+pb_clean &lt;- pb_clean %&gt;%
+  mutate(roe = as.numeric(na_if(roe, "#N/A"))) %&gt;%
+  mutate(roic = as.numeric(na_if(roic, "#N/A")))
+```
+
+---
+# After the clean up
+
+```r
+glimpse(pb_clean)
+```
+
+```
+## Observations: 182
+## Variables: 8
+## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT"…
+## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc…
+## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, …
+## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, …
+## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, …
+## $ industry        &lt;fct&gt; Real Estate Investment Trusts, Food: Major Diver…
+## $ roe             &lt;dbl&gt; 1.4, 11.6, 6.9, 9.9, 0.9, 16.5, 4.5, 4.6, 9.3, 6…
+## $ roic            &lt;dbl&gt; 0.9, 4.1, 3.4, 6.1, 0.8, 7.8, 2.2, NA, 4.6, 4.1,…
+```
+
+Looking good! *Industry* is now a factor and *ROE* and *ROIC* are numeric with proper NA values. See Chapter 7.4 for a little more on NA or missing values. `is.na` is a very useful function.
+
+---
+# Variation. Yikes!
+
+
+```r
+pb_clean %&gt;%
+  ggplot() +
+  geom_bar(mapping = aes(x = industry))
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+---
+# One way...
+
+I am using `forcats::fct_lump` to collapse the least common factors into *other*.
+
+
+```r
+pb_clean %&gt;%
+  mutate(industry_lump = fct_lump(industry, n = 5)) %&gt;%
+  ggplot() +
+    geom_bar(mapping = aes(x = industry_lump)) + 
+    coord_flip()
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-8-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+# Variation. Another way...
+Let's just create a table. Note that the variable *n* is created by `count`.
+
+
+```r
+pb_clean %&gt;%
+  count(industry) %&gt;%
+  arrange(-n) %&gt;%
+  slice(1:10)
+```
+
+```
+## # A tibble: 10 x 2
+##    industry                          n
+##    &lt;fct&gt;                         &lt;int&gt;
+##  1 Real Estate Investment Trusts    11
+##  2 Electric Utilities               10
+##  3 Finance/Rental/Leasing            6
+##  4 Broadcasting                      5
+##  5 Industrial Machinery              5
+##  6 Oil &amp; Gas Pipelines               5
+##  7 Apparel/Footwear Retail           4
+##  8 Homebuilding                      4
+##  9 Hotels/Resorts/Cruiselines        4
+## 10 Industrial Specialties            4
+```
+
+---
+# Variation with a continuous variable
+
+You can use `ggplot` and/or `summarise`. You are looking for typical values, the range, anything unusual, any problems with the data. See Chapter 7.3 for more.
+
+
+```r
+pb_clean %&gt;% 
+  ggplot(aes(x = PricetoCashFlow)) + 
+  geom_histogram(binwidth = 1) + 
+  ggtitle("P/CF Distribution") + 
+  xlab("P/CF") + 
+  ylab("n") + 
+  theme_minimal()
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-10-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+---
+
+# Covariation. Discrete and continuous.
+
+Covariation describes **relationships between variables**. These variables can be discrete or continuous. *Watch for the transition from %&gt;% to +*.
+
+
+
+```r
+pb_clean %&gt;% 
+  group_by(industry) %&gt;% 
+  mutate(count = n()) %&gt;% 
+  ungroup() %&gt;% 
+  filter(count &gt;= 5) %&gt;%
+  ggplot(mapping = aes(x = reorder(industry, PricetoCashFlow, 
+                        FUN = median), y = PricetoCashFlow)) +
+    geom_boxplot() +
+    xlab("Industry") +
+    coord_flip()
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-11-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Covariation. Two continuous.
+
+Are two value measures related?
+
+
+```r
+pb_clean %&gt;% 
+  ggplot(mapping = aes(x = PricetoCashFlow, y = PricetoBook)) +
+    geom_point()
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-12-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+```r
+cor(pb_clean$PricetoCashFlow, pb_clean$PricetoBook)
+```
+
+```
+## [1] 0.4447168
+```
+
+---
+# Covariation. Two continuous (cont.)
+
+```r
+pb_clean %&gt;% 
+  group_by(industry) %&gt;% 
+  mutate(count = n()) %&gt;% 
+  ungroup() %&gt;% 
+  filter(count &gt;= 5) %&gt;%
+  ggplot(mapping = aes(x = PricetoBook, y = roic, color = industry)) +
+    geom_point() + 
+    geom_text(aes(label = symbol), hjust = 0, vjust = 0, size = 4)
+```
+
+```
+## Warning: Removed 18 rows containing missing values (geom_point).
+```
+
+```
+## Warning: Removed 18 rows containing missing values (geom_text).
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-13-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+---
+# Covariation. Several continuous.
+
+
+```r
+mod1 &lt;- lm(PricetoBook ~ roe + roic, data = pb_clean)
+summary(mod1)
+```
+
+```
+## 
+## Call:
+## lm(formula = PricetoBook ~ roe + roic, data = pb_clean)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.3467 -0.4877 -0.1225  0.3807  2.4648 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.9314571  0.1399609   6.655 9.84e-10 ***
+## roe         -0.0008888  0.0050190  -0.177     0.86    
+## roic         0.1039749  0.0170502   6.098 1.45e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.7182 on 116 degrees of freedom
+##   (63 observations deleted due to missingness)
+## Multiple R-squared:  0.3163,	Adjusted R-squared:  0.3045 
+## F-statistic: 26.83 on 2 and 116 DF,  p-value: 2.65e-10
+```
+
+
+
+---
+class: inverse, center, middle
+# Getting our data tidy
+(Chapter 12. We can't explore if the data is a mess.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+
+---
+# What is tidy data?
+.pull_center[
+![](img/tidy1.png)
+]
+--
+
+But our data doesn't always look like this. Let's look at **Chapter 12** of our text to learn more about to organize our data in a way that lends itself to analysis. 
+
+Many of these notes come from [https://moderndive.com/4-tidy.html](https://moderndive.com/4-tidy.html), which is also covers the material found in our text.
+
+We are going to discuss **three important concepts**: gathering, spreading, and missing values.
+
+---
+# Some untidy stock data
+
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Date &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Boeing Stock Price &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Amazon Stock Price &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Google Stock Price &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-01 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.55 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.90 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.34 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-02 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $172.61 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $171.42 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $170.04 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-03 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.86 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $171.58 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.65 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-04 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $170.77 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.89 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.87 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-05 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.29 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $170.16 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $172.19 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+Why is this data **not tidy**? It seems like what you might put together in a spreadsheet, right?
+
+--
+ 
+There are three variables corresponding to three unique pieces of information (Date, Stock Name, and Stock Price), but there are not three columns. In the tidy data format, each variable should be its own column. Think about how the `group_by` verb works.
+ 
+---
+
+# Wide vs. long
+
+
+```r
+stocks_tidy &lt;- stocks %&gt;% 
+  rename(
+    Boeing = `Boeing Stock Price`,
+    Amazon = `Amazon Stock Price`,
+    Google = `Google Stock Price`
+  ) %&gt;% 
+  gather(`Stock Name`, `Stock Price`, -Date)
+```
+
+The `stocks` data had 5 observations and 4 variables. The `stocks_tidy` data has 15 observations and 3 variables.
+
+---
+
+# Wide vs. long (cont.)
+
+Here's an excerpt of the **tidy** data. We've created what is called a **long** format. The original data format is called **wide**. Do you see why?
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Date &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Stock Name &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Stock Price &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-01 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Boeing &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.55 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-02 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Boeing &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $172.61 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-03 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Boeing &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.86 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-04 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Boeing &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $170.77 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-05 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Boeing &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.29 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-01 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Amazon &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $174.90 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-02 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Amazon &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $171.42 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-03 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Amazon &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $171.58 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-04 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Amazon &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $173.89 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2009-01-05 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Amazon &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; $170.16 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Types of variables
+
+1. **Identification**. This will often be a ticker, CUSIP, or some other identifier.
+2. **Date**. We'll talk more about how to deal with them.
+3. **Measurement**. This items of interest, like a price or return.
+
+Sometimes there are more than one identification variable. We sometimes talk about our data's **key**. In other words, what combination of variables uniquely identify each observation? For stock returns, our key might be the ticker/date. This will be very important when we discuss merging data.
+
+Put your ID or key variables all the way to the left in your data.
+
+---
+# Using `gather`
+
+Let's use our real ETF data now. This example is taken from Chapter 1 of [a new book on reproducible finance]([http://www.reproduciblefinance.com) written by Jonathan Regenstein, Jr. at RStudio. This book shows you how to perform the same tasks using three different sets of tools: `xts`, `tidyverse`, and `tidyquant`. We will use all three in our class.
+
+Let's start with the `tidyverse`, since that's what we've been using. We've already imported our etf data from his website. Is it "tidy"?
+
+
+```r
+glimpse(etf)
+```
+
+```
+## Observations: 1,259
+## Variables: 6
+## $ date &lt;date&gt; 2012-12-31, 2013-01-02, 2013-01-03, 2013-01-04, 2013-01-07…
+## $ SPY  &lt;dbl&gt; 128.3092, 131.5977, 131.3004, 131.8771, 131.5166, 131.1382,…
+## $ EFA  &lt;dbl&gt; 49.16410, 49.92501, 49.44080, 49.69155, 49.47539, 49.19869,…
+## $ IJS  &lt;dbl&gt; 75.06590, 77.12553, 77.02349, 77.62656, 77.17194, 76.87505,…
+## $ EEM  &lt;dbl&gt; 39.89233, 40.67489, 40.38705, 40.46800, 40.16218, 39.80238,…
+## $ AGG  &lt;dbl&gt; 98.19626, 98.08131, 97.83374, 97.93983, 97.88681, 97.97523,…
+```
+
+
+What if we wanted to plot returns by date using `ggplot`. Could we with the data in this format? Not easily. How would you set `y = ticker`? "ticker" isn't a variable!
+---
+
+# Using `gather` (cont.)
+
+One thing to remember about `tibble`s and finance data: tibbles **do not** have to have a date column. As we'll see, other data objects used in finance, like `xts` objects, must have what is called a **date index**. A `tibble` is more generic and used for all types of data.
+
+Let's do this in steps. First, let's get our price data into a tidy format using `gather`. Note that I need to save the work somewhere in the global environment. I am calling the new `tibble` etf_returns.
+
+
+```r
+etf_returns &lt;- etf %&gt;% 
+  gather(key = asset, value = prices, -date) 
+```
+
+---
+# Using `gather` (cont.)
+
+The `gather` function in the tidyr package can complete this task for us. I am piping the tibble to gather(), just as with `ggplot2`, so we don't need a `data = ` argument. The **key** argument is the name of the valus that form the columns (asset) and **value** is the variable that is spread over the cells (prices). Lastly, we include a specification for variables we’d like to NOT include in this tidying process using a -. 
+
+You could include variables by just listing them (see the text).
+
+Note that you **do not** need to include `key = ` or `value = `. I've done so for readability and suggest that you do to until you get the hang of things.
+
+---
+# Using `gather` (cont.)
+
+Three variables, where `asset` now designates the name of the security. This will let use use `group_by` to calculate returns.
+
+
+```r
+glimpse(etf_returns)
+```
+
+```
+## Observations: 6,295
+## Variables: 3
+## $ date   &lt;date&gt; 2012-12-31, 2013-01-02, 2013-01-03, 2013-01-04, 2013-01-…
+## $ asset  &lt;chr&gt; "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "…
+## $ prices &lt;dbl&gt; 128.3092, 131.5977, 131.3004, 131.8771, 131.5166, 131.138…
+```
+
+---
+# Calculating returns
+Let's `group_by` asset and use `mutate` to calculate log returns. Note that `lag` function. We can then drop the price variable.
+
+
+```r
+etf_returns &lt;- etf_returns %&gt;%
+  group_by(asset) %&gt;% 
+  mutate(returns = (log(prices) - log(lag(prices)))) %&gt;% 
+  select(-prices)
+```
+
+---
+# Calculating returns (cont.) 
+Oh no! What went wrong? Note that the `kable` function just makes a nicer looking table from the `summarise` output.
+
+
+```r
+etf_returns %&gt;% 
+  group_by(asset) %&gt;% 
+  summarise(
+    mean = mean(returns),
+    stdev = sd(returns)
+  ) %&gt;%
+  kable(format='html')
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; asset &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; stdev &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; AGG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; EEM &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; EFA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; IJS &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; SPY &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Calculating returns (cont.) 
+We forgot to remove the missing values. Remember, you we calculate returns from prices, the first observation is going to be missing, by construction. In R, this missing value gets propogated up and causes the summary values to also be missing. We can fix that with `na.rm = TRUE`.
+
+
+```r
+etf_returns %&gt;% group_by(asset) %&gt;% 
+  summarise(
+    mean = mean(returns, na.rm = TRUE),
+    stdev = sd(returns, na.rm = TRUE)
+  ) %&gt;% kable(format='html')
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; asset &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; stdev &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; AGG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000756 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0020336 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; EEM &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0001286 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0115799 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; EFA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0002838 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0090231 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; IJS &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0005717 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0095005 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; SPY &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0005819 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0074835 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+---
+# Using `spread` to go back
+Spreading is the opposite of gathering. You use it when an observation is scattered across multiple rows. In this case, some financial packages in R want the data in our original format (i.e. where every column is the ID for the stock, like a ticker).
+
+
+```r
+etf_returns_spread &lt;- etf_returns %&gt;%
+  spread(key = asset, value = returns)
+
+head(etf_returns_spread, 3)
+```
+
+```
+## # A tibble: 3 x 6
+##   date             AGG       EEM       EFA       IJS       SPY
+##   &lt;date&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 2012-12-31  NA        NA        NA        NA        NA      
+## 2 2013-01-02  -0.00117   0.0194    0.0154    0.0271    0.0253 
+## 3 2013-01-03  -0.00253  -0.00710  -0.00975  -0.00132  -0.00226
+```
+---
+# Cleaning things up
+
+Let's say that we aren't happy with the order of our columns. Let's put the symbols into a vector and then re-order them using `select`.
+
+```r
+symbols &lt;- c("SPY","EFA", "IJS", "EEM","AGG")
+
+etf_returns_spread &lt;- etf_returns_spread %&gt;%
+  select(date, symbols)
+
+head(etf_returns_spread, 3)
+```
+
+```
+## # A tibble: 3 x 6
+##   date             SPY       EFA       IJS       EEM       AGG
+##   &lt;date&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 2012-12-31  NA        NA        NA        NA        NA      
+## 2 2013-01-02   0.0253    0.0154    0.0271    0.0194   -0.00117
+## 3 2013-01-03  -0.00226  -0.00975  -0.00132  -0.00710  -0.00253
+```
+
+---
+# Cleaning things up (cont.)
+
+But what about those missing values? Let's get rid of them using `na.omit`. See Chapter 12.5 for more on missing values, including the `fill` and `complete` functions.
+
+**Understanding your missing values is crucial to good data analysis!**
+
+
+```r
+etf_returns_spread &lt;- etf_returns_spread %&gt;%
+  na.omit()
+
+head(etf_returns_spread, 3)
+```
+
+```
+## # A tibble: 3 x 6
+##   date            SPY      EFA      IJS      EEM      AGG
+##   &lt;date&gt;        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 2013-01-02  0.0253   0.0154   0.0271   0.0194  -0.00117
+## 2 2013-01-03 -0.00226 -0.00975 -0.00132 -0.00710 -0.00253
+## 3 2013-01-04  0.00438  0.00506  0.00780  0.00200  0.00108
+```
+
+---
+# A few visualizations using `ggplot`
+
+We can take our "long" data and create overlapping histograms of returns. What's going on with the warning?
+
+
+
+```r
+etf_returns %&gt;% 
+  ggplot(aes(x = returns, fill = asset)) + 
+  geom_histogram(alpha = 0.45, binwidth = .005) + 
+  ggtitle("Monthly Returns")
+```
+
+```
+## Warning: Removed 5 rows containing non-finite values (stat_bin).
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-27-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+# A few visualizations using `ggplot`
+
+I'm not sure that was very informative. Let's try a `facet_wrap`. We can change some settings to make the title nicer, too. 
+
+
+```r
+etf_returns %&gt;% 
+  ggplot(aes(x = returns, fill = asset)) + 
+  geom_histogram(alpha = 0.45, binwidth = .01) + 
+  facet_wrap(~ asset) +
+  ggtitle("Monthly Returns") + 
+  theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+```
+## Warning: Removed 5 rows containing non-finite values (stat_bin).
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-28-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+# A few visualizations using `ggplot`
+
+
+```
+## Warning: Removed 5 rows containing non-finite values (stat_bin).
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-29-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+---
+# A few visualizations using `ggplot`
+
+
+```r
+etf_returns %&gt;% 
+  ggplot(aes(x = returns, color = asset)) + 
+  geom_density(alpha = 1) + 
+  ggtitle("Monthly Returns Density Plot") + 
+  xlab("monthly returns") + 
+  ylab("count") + 
+  theme_minimal()
+```
+
+```
+## Warning: Removed 5 rows containing non-finite values (stat_density).
+```
+
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-30-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+
+
+---
+
+# For next class...
+
+- You will work on Lab #3, in which you tell me a story about housing in Kansas City
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

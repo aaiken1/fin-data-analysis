@@ -1,0 +1,183 @@
+﻿symbol,name,PricetoCashFlow,PricetoSales,PricetoBook,industry,roe,roic
+AMH,American Homes 4 Rent Class A,14.36,6.22,1.23,Real Estate Investment Trusts,1.4,0.9
+BGS,"B&G Foods, Inc.",10.70,1.06,2.17,Food: Major Diversified,11.6,4.1
+KMI,Kinder Morgan Inc Class P,6.55,2.42,1.03,Oil & Gas Pipelines,6.9,3.4
+PBA,Pembina Pipeline Corporation,10.91,2.94,1.92,Oil & Gas Pipelines,9.9,6.1
+STAG,"STAG Industrial, Inc.",13.92,7.74,1.81,Real Estate Investment Trusts,0.9,0.8
+UTX,United Technologies Corporation,14.00,1.33,2.39,Industrial Conglomerates,16.5,7.8
+COT,Cott Corporation,12.75,0.97,1.83,Beverages: Non-Alcoholic,4.5,2.2
+RLJ,RLJ Lodging Trust,10.48,2.11,1.21,Real Estate Investment Trusts,4.6,#N/A
+WRK,WestRock Company,4.15,0.59,0.83,Containers/Packaging,9.3,4.6
+ENBL,Enable Midstream Partners LP,6.34,1.72,0.81,Oil Refining/Marketing,6.5,4.1
+PDCO,"Patterson Companies, Inc.",7.04,0.39,1.49,Medical Distributors,8.9,5.6
+HTGC,"Hercules Capital, Inc.",13.15,6.60,1.27,Investment Trusts/Mutual Funds,13.1,5.1
+DRH,DiamondRock Hospitality Company,11.96,2.89,1.27,Real Estate Investment Trusts,4.6,3.2
+CCMP,Cabot Microelectronics Corporation,17.42,3.94,2.73,Industrial Specialties,#N/A,12.3
+MINI,"Mobile Mini, Inc.",8.90,2.40,1.75,Finance/Rental/Leasing,13.0,#N/A
+HIFR,"InfraREIT, Inc.",7.28,4.62,1.38,Real Estate Investment Trusts,#N/A,#N/A
+VICI,VICI Properties Inc,14.41,8.07,1.11,Real Estate Development,8.9,5.6
+ISCA,International Speedway Corporation Class A,8.87,2.75,1.11,Movies/Entertainment,5.2,#N/A
+SYMC,Symantec Corporation,10.01,2.55,2.01,Packaged Software,17.5,9.4
+HPT,Hospitality Properties Trust,8.30,2.08,1.70,Real Estate Investment Trusts,#N/A,4.5
+FTS,Fortis Inc.,7.23,2.20,1.31,Electric Utilities,#N/A,#N/A
+AWK,"American Water Works Company, Inc.",11.85,4.78,2.80,Water Utilities,10.7,4.6
+SHLX,Shell Midstream Partners LP,8.40,9.40,1.47,Oil & Gas Pipelines,164.0,19.4
+PPL,PPL Corporation,7.30,2.65,1.75,Electric Utilities,14.7,#N/A
+CCL.U,Carnival Corporation,7.59,2.23,1.72,Hotels/Resorts/Cruiselines,12.8,8.3
+CUK,Carnival plc Sponsored ADR,7.48,2.20,1.69,Hotels/Resorts/Cruiselines,12.8,8.3
+RDS.B,Royal Dutch Shell Plc Sponsored ADR Class B,4.94,0.65,1.24,Integrated Oil,11.1,7.4
+CAG,"Conagra Brands, Inc.",17.60,1.71,2.23,Food: Major Diversified,13.0,4.9
+JCI,Johnson Controls International plc,9.95,0.93,1.35,Miscellaneous Commercial Services,7.3,5.5
+XRAY,"DENTSPLY SIRONA, Inc.",16.04,2.10,1.63,Medical Specialties,7.8,6.3
+AVGO,Broadcom Inc.,10.67,4.44,3.35,Semiconductors,47.1,19.6
+BHGE,"Baker Hughes, a GE Company Class A",5.71,0.44,0.63,Oilfield Services/Equipment,3.3,2.6
+AY,Atlantica Yield plc,5.17,1.93,1.17,Alternative Power Generation,5.0,#N/A
+KSS,Kohl's Corporation,5.65,0.63,2.33,Department Stores,16.3,9.2
+OLN,Olin Corporation,3.74,0.48,1.17,Industrial Specialties,10.9,4.9
+NWS,News Corporation Class B,7.44,0.68,0.73,Publishing: Newspapers,2.6,#N/A
+NWSA,News Corporation Class A,7.31,0.67,0.72,Publishing: Newspapers,2.6,#N/A
+PSDO,"Presidio, Inc.",7.81,0.38,1.73,Information Technology Services,20.8,#N/A
+AVT,"Avnet, Inc.",16.42,0.20,0.89,Electronics Distributors,10.3,7.4
+LOGM,"LogMeIn, Inc.",10.37,3.48,1.39,Internet Software/Services,8.6,8.3
+TRTN,Triton International Ltd. Class A,2.66,1.73,1.14,Finance/Rental/Leasing,15.6,3.6
+PDM,"Piedmont Office Realty Trust, Inc. Class A",10.82,4.17,1.26,Real Estate Investment Trusts,3.4,1.7
+RDS.A,Royal Dutch Shell Plc Sponsored ADR Class A,4.81,0.63,1.21,Integrated Oil,11.1,7.4
+PG,Procter & Gamble Company,15.94,3.60,4.33,Household/Personal Care,20.8,13.0
+TGP,Teekay LNG Partners L.P.,16.92,2.74,0.87,Marine Shipping,7.3,3.1
+BYD,Boyd Gaming Corporation,9.24,1.61,3.32,Casinos/Gaming,15.2,4.0
+DKS,"Dick's Sporting Goods, Inc.",4.57,0.42,1.87,Specialty Stores,15.7,13.8
+IDCC,"InterDigital, Inc.",7.23,6.51,2.75,Telecommunications Equipment,3.6,#N/A
+TRP,TransCanada Corporation,6.46,3.18,1.77,Oil & Gas Pipelines,12.7,4.6
+WH,"Wyndham Hotels & Resorts, Inc.",19.48,2.41,3.14,Hotels/Resorts/Cruiselines,21.9,8.7
+DGX,Quest Diagnostics Incorporated,9.51,1.51,2.16,Services to the Health Industry,16.0,8.4
+ANF,Abercrombie & Fitch Co. Class A,4.15,0.38,1.19,Apparel/Footwear Retail,5.4,4.4
+WMK,"Weis Markets, Inc.",6.78,0.33,1.15,Food Retail,#N/A,#N/A
+PEG,Public Service Enterprise Group Inc,8.87,2.82,1.85,Electric Utilities,10.8,5.2
+OGS,"ONE Gas, Inc.",9.06,2.59,2.05,Gas Distributors,8.5,#N/A
+INN,"Summit Hotel Properties, Inc.",8.77,2.48,1.17,Real Estate Investment Trusts,7.5,3.2
+IOSP,Innospec Inc.,14.47,1.03,1.83,Chemicals: Specialty,#N/A,#N/A
+AVA,Avista Corporation,7.66,2.00,1.57,Electric Utilities,#N/A,#N/A
+MDT,Medtronic plc,19.76,3.85,2.34,Medical Specialties,13.3,9.1
+STZ,"Constellation Brands, Inc. Class A",17.34,5.22,3.26,Beverages: Alcoholic,15.9,7.1
+MAIN,Main Street Capital Corporation,13.76,10.34,1.56,Investment Managers,10.3,#N/A
+ED,"Consolidated Edison, Inc.",8.68,1.92,1.49,Electric Utilities,7.9,#N/A
+SJM,J.M. Smucker Company,9.97,1.61,1.54,Food: Specialty/Candy,10.9,6.3
+CAH,"Cardinal Health, Inc.",6.55,0.09,2.20,Medical Distributors,23.9,10.6
+ADI,"Analog Devices, Inc.",15.44,6.02,3.20,Semiconductors,17.7,11.9
+LADR,Ladder Capital Corp. Class A,6.74,2.89,1.23,Real Estate Investment Trusts,13.4,3.2
+BEN,"Franklin Resources, Inc.",9.37,2.53,1.56,Investment Managers,11.7,10.9
+NVT,nVent Electric plc,11.78,1.83,1.48,Electronic Components,#N/A,#N/A
+STX,Seagate Technology PLC,5.79,0.97,5.61,Computer Peripherals,71.2,21.9
+RCL,Royal Caribbean Cruises Ltd.,5.90,2.16,1.84,Hotels/Resorts/Cruiselines,19.9,9.3
+XRX,Xerox Corporation,4.27,0.49,0.91,Computer Peripherals,17.8,#N/A
+SR,Spire Inc.,7.39,1.88,1.64,Gas Distributors,8.1,#N/A
+HUN,Huntsman Corporation,3.76,0.48,1.78,Chemicals: Major Diversified,22.7,12.6
+BC,Brunswick Corporation,12.13,0.80,2.55,Recreational Products,22.5,12.7
+RL,Ralph Lauren Corporation Class A,11.69,1.30,2.39,Apparel/Footwear Retail,17.1,14.8
+NWE,NorthWestern Corporation,7.90,2.53,1.54,Electric Utilities,8.6,#N/A
+WDR,"Waddell & Reed Financial, Inc. Class A",3.94,1.21,1.57,Investment Managers,11.3,#N/A
+TRCO,Tribune Media Co. Class A,9.51,1.77,0.98,Broadcasting,9.3,#N/A
+HFC,HollyFrontier Corporation,5.73,0.50,1.49,Oil Refining/Marketing,15.3,10.4
+PRGS,Progress Software Corporation,13.15,4.02,5.12,Packaged Software,32.6,#N/A
+ATO,Atmos Energy Corporation,9.46,3.40,2.03,Gas Distributors,8.8,#N/A
+WBA,Walgreens Boots Alliance Inc,10.38,0.60,3.12,Drugstore Chains,24.9,15.1
+DDS,"Dillard's, Inc. Class A",6.81,0.30,1.19,Department Stores,9.3,7.2
+BRC,Brady Corporation Class A,16.78,1.81,2.73,Miscellaneous Manufacturing,14.1,#N/A
+ECA,Encana Corporation,6.03,2.39,1.92,Oil & Gas Production,10.3,6.0
+TKR,Timken Company,8.69,0.81,1.79,Metal Fabrication,#N/A,#N/A
+KR,Kroger Co.,6.29,0.20,3.27,Food Retail,21.9,8.5
+GPS,"Gap, Inc.",8.02,0.65,3.10,Apparel/Footwear Retail,28.3,21.0
+EVRG,"Evergy, Inc.",10.84,4.02,1.36,Electric Utilities,8.0,#N/A
+GT,Goodyear Tire & Rubber Company,5.20,0.31,0.97,Automotive Aftermarket,10.2,4.6
+BKH,Black Hills Corporation,7.49,2.09,1.73,Electric Utilities,9.1,#N/A
+ETM,Entercom Communications Corp. Class A,11.34,0.85,0.65,Broadcasting,#N/A,#N/A
+SSW,Seaspan Corporation,3.66,1.43,0.60,Marine Shipping,7.7,#N/A
+HY,"Hyster-Yale Materials Handling, Inc. Class A",10.25,0.33,1.83,Trucks/Construction/Farm Machinery,#N/A,#N/A
+CSGS,"CSG Systems International, Inc.",7.23,1.18,2.92,Data Processing Services,#N/A,#N/A
+AIT,"Applied Industrial Technologies, Inc.",11.04,0.62,2.35,Wholesale Distributors,#N/A,#N/A
+CMI,Cummins Inc.,8.95,0.90,2.87,Trucks/Construction/Farm Machinery,30.9,23.6
+NSC,Norfolk Southern Corporation,10.98,3.57,2.61,Railroads,17.8,10.5
+SNA,Snap-on Incorporated,10.76,2.02,2.61,Tools & Hardware,#N/A,15.3
+FL,"Foot Locker, Inc.",7.59,0.71,2.26,Apparel/Footwear Retail,21.2,20.3
+KMT,Kennametal Inc.,10.19,1.14,2.15,Industrial Machinery,18.6,13.3
+MLHR,"Herman Miller, Inc.",11.40,0.81,2.91,Office Equipment/Supplies,21.2,15.2
+RTN,Raytheon Company,12.74,1.61,3.77,Aerospace & Defense,26.2,19.0
+HMC,"Honda Motor Co., Ltd. Sponsored ADR",6.01,0.33,0.62,Motor Vehicles,8.6,4.9
+SBGI,"Sinclair Broadcast Group, Inc. Class A",5.18,1.01,1.76,Broadcasting,20.6,5.8
+KRC,Kilroy Realty Corporation,15.55,8.56,1.61,Real Estate Investment Trusts,3.3,#N/A
+AZZ,AZZ Inc.,12.41,1.35,2.09,Electrical Products,#N/A,#N/A
+MEI,"Methode Electronics, Inc.",9.82,1.11,1.63,Electronic Components,#N/A,#N/A
+CRS,Carpenter Technology Corporation,7.15,0.74,1.12,Metal Fabrication,9.9,#N/A
+GM,General Motors Company,3.14,0.33,1.21,Motor Vehicles,19.7,15.8
+CSL,Carlisle Companies Incorporated,17.62,1.33,2.24,Miscellaneous Manufacturing,14.6,10.1
+GGB,Gerdau S.A. Sponsored ADR Pfd,16.77,0.57,1.08,Steel,12.0,6.2
+INTC,Intel Corporation,7.34,3.05,2.83,Semiconductors,24.0,18.4
+WLK,Westlake Chemical Corporation,6.03,0.98,1.52,Chemicals: Major Diversified,11.3,9.5
+LDOS,"Leidos Holdings, Inc.",10.34,0.77,2.31,Information Technology Services,20.3,9.6
+VIA,Viacom Inc. Class A,5.51,0.87,1.46,Movies/Entertainment,19.6,9.8
+VIAB,Viacom Inc. Class B,5.09,0.80,1.35,Movies/Entertainment,19.6,9.8
+PNW,Pinnacle West Capital Corporation,6.82,2.41,1.66,Electric Utilities,9.9,#N/A
+WTS,"Watts Water Technologies, Inc. Class A",13.07,1.41,2.47,Industrial Machinery,#N/A,10.3
+RS,Reliance Steel & Aluminum Co.,14.34,0.56,1.22,Steel,10.7,#N/A
+TSN,"Tyson Foods, Inc. Class A",6.95,0.47,1.43,Food: Meat/Fish/Dairy,16.5,8.8
+PNM,"PNM Resources, Inc.",7.44,2.21,1.77,Electric Utilities,8.9,3.3
+BPL,"Buckeye Partners, L.P.",5.29,1.09,1.08,Oil & Gas Pipelines,11.0,5.2
+ODP,"Office Depot, Inc.",2.95,0.17,0.80,Specialty Stores,7.8,#N/A
+CNQ,Canadian Natural Resources Limited,5.17,2.30,1.53,Oil & Gas Production,11.1,7.0
+KSU,Kansas City Southern,10.25,3.52,2.00,Railroads,13.1,8.9
+AYR,Aircastle Limited,2.52,1.49,0.65,Finance/Rental/Leasing,8.2,#N/A
+SSP,E. W. Scripps Company Class A,16.56,1.23,1.47,Broadcasting,#N/A,4.4
+TSU,TIM Participacoes S.A. Sponsored ADR,3.72,1.46,1.43,Wireless Telecommunications,9.6,7.9
+DLX,Deluxe Corporation,5.15,0.88,1.86,Commercial Printing/Forms,#N/A,#N/A
+B,Barnes Group Inc.,19.06,2.49,3.02,Industrial Machinery,13.1,7.7
+WLTW,Willis Towers Watson Public Limited Company,15.45,2.34,1.99,Insurance Brokers/Services,13.4,#N/A
+LEA,Lear Corporation,4.46,0.38,1.84,Auto Parts: OEM,26.1,16.3
+MGA,Magna International Inc.,5.11,0.44,1.60,Auto Parts: OEM,16.8,13.4
+BCC,Boise Cascade Co.,9.41,0.29,1.91,Forest Products,#N/A,7.8
+LXP,Lexington Realty Trust,9.06,4.97,1.54,Real Estate Investment Trusts,16.5,7.8
+CCJ,Cameco Corporation,9.97,2.79,1.23,Other Metals/Minerals,#N/A,#N/A
+TEX,Terex Corporation,15.81,0.60,2.99,Trucks/Construction/Farm Machinery,19.9,9.8
+FUL,H.B. Fuller Company,9.91,0.83,2.12,Industrial Specialties,13.6,5.1
+SYF,Synchrony Financial,1.81,1.12,1.15,Savings Banks,19.6,8.7
+SXI,Standex International Corporation,14.55,1.02,1.86,Miscellaneous Manufacturing,#N/A,#N/A
+HA,"Hawaiian Holdings, Inc.",2.55,0.46,1.35,Airlines,18.3,11.8
+WWD,"Woodward, Inc.",12.31,1.90,2.81,Industrial Machinery,14.9,9.4
+OSK,Oshkosh Corp,13.76,0.56,1.78,Trucks/Construction/Farm Machinery,20.0,15.1
+CTSH,Cognizant Technology Solutions Corporation Class A,14.18,2.28,3.21,Information Technology Services,19.6,18.7
+DK,Delek US Holdings Inc,4.79,0.27,1.53,Oil Refining/Marketing,20.3,9.7
+PSX,Phillips 66,5.28,0.36,1.45,Oil Refining/Marketing,14.4,9.8
+GPI,"Group 1 Automotive, Inc.",4.17,0.08,0.88,Specialty Stores,13.3,6.4
+TGNA,"TEGNA, Inc.",7.04,1.26,2.14,Broadcasting,29.5,#N/A
+ENS,EnerSys,13.24,1.22,2.50,Electrical Products,15.3,#N/A
+NNI,"Nelnet, Inc. Class A",12.12,1.45,1.01,Finance/Rental/Leasing,8.3,#N/A
+DHR,Danaher Corporation,18.23,3.69,2.56,Medical Specialties,10.9,7.1
+PBR,Petroleo Brasileiro SA Sponsored ADR,4.05,0.83,1.08,Integrated Oil,11.8,5.1
+PBR.A,Petroleo Brasileiro SA Sponsored ADR Pfd,3.51,0.72,0.94,Integrated Oil,12.0,5.1
+DAN,Dana Incorporated,3.50,0.24,1.47,Auto Parts: OEM,35.4,12.6
+OC,Owens Corning,6.04,0.69,1.12,Construction Materials,11.9,6.9
+SNDR,"Schneider National, Inc. Class B",5.83,0.66,1.56,Trucking,12.6,11.0
+VSH,"Vishay Intertechnology, Inc.",10.34,0.88,1.88,Electronic Components,17.1,#N/A
+XPER,Xperi Corp,6.61,2.20,1.44,Electronic Production Equipment,19.9,#N/A
+WERN,"Werner Enterprises, Inc.",5.03,0.85,1.65,Trucking,13.1,12.5
+DXC,DXC Technology Co.,8.54,0.68,1.30,Data Processing Services,19.6,12.1
+ITT,"ITT, Inc.",17.22,1.98,3.01,Industrial Machinery,14.8,14.1
+CAL,"Caleres, Inc.",9.14,0.53,1.99,Apparel/Footwear,12.0,#N/A
+RRC,Range Resources Corporation,4.24,1.39,0.73,Oil & Gas Production,4.5,2.7
+CW,Curtiss-Wright Corporation,18.72,2.57,3.71,Aerospace & Defense,16.5,11.3
+SF,Stifel Financial Corp.,4.97,1.04,0.97,Investment Banks/Brokers,11.7,#N/A
+TUSK,"Mammoth Energy Services, Inc.",4.38,0.74,1.88,Oilfield Services/Equipment,25.9,#N/A
+EXP,Eagle Materials Inc.,7.96,2.04,1.99,Construction Materials,16.5,11.5
+AL,Air Lease Corporation Class A,4.38,3.17,1.07,Finance/Rental/Leasing,12.1,#N/A
+TECK,Teck Resources Limited Class B,4.09,1.29,0.73,Other Metals/Minerals,8.6,7.0
+BTU,Peabody Energy Corporation,1.77,0.63,0.97,Coal,5.9,#N/A
+GHC,Graham Holdings Co.,12.93,1.15,1.03,Other Consumer Services,#N/A,#N/A
+TOL,"Toll Brothers, Inc.",8.36,0.70,1.03,Homebuilding,12.5,7.8
+MTX,Minerals Technologies Inc.,8.99,1.01,1.33,Industrial Specialties,11.5,7.3
+AAN,"Aaron's, Inc.",8.19,0.76,1.60,Finance/Rental/Leasing,13.4,10.6
+MOS,Mosaic Company,7.53,1.37,1.20,Chemicals: Agricultural,6.8,3.8
+KBH,KB Home,9.19,0.47,0.88,Homebuilding,10.2,6.4
+TXT,Textron Inc.,10.00,0.79,2.07,Industrial Conglomerates,15.9,10.4
+LEN,Lennar Corporation Class A,6.76,0.68,0.95,Homebuilding,11.9,7.4
+LEN.B,Lennar Corporation Class B,5.47,0.55,0.77,Homebuilding,11.9,7.4
+X,United States Steel Corporation,3.45,0.23,0.76,Steel,10.7,6.9
+PVH,PVH Corp.,12.77,1.01,1.69,Apparel/Footwear,12.6,8.3

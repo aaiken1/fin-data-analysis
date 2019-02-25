@@ -117,11 +117,53 @@ Did you see how *ROE* and *ROIC* got brought in as &lt;chr&gt; strings? Strange!
 `dplyr::na_if` swaps out whatever value you give it for true NAs. `as.numeric` tells R to treat the column as a numerical value. With the real NA values in place, the whole column is actually numeric, so R can do this switch. The fancy term for this is **type coercion**. 
 
 
+
 ```r
 pb_clean &lt;- pb_clean %&gt;%
   mutate(roe = as.numeric(na_if(roe, "#N/A"))) %&gt;%
   mutate(roic = as.numeric(na_if(roic, "#N/A")))
 ```
+
+---
+# Checking for missing values
+
+For small data sets, you can always just scroll through and see what's going on. But, if you have millions (or billions) of rows, not so much. `summarise_all` affects every variable coming through the pipe. The `~` let me make a little function inside of `summarise_all`, as `summarise_all` on its own doesn't let me add up observations with a conditional statement (i.e. only add the row it the value is missing). The `kable` function just makes a nice looking table.
+
+
+```r
+pb_clean %&gt;%
+  summarise_all(~sum(is.na(.))) %&gt;%
+  kable(format='html')
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; symbol &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; name &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; PricetoCashFlow &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; PricetoSales &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; PricetoBook &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; industry &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; roe &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; roic &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 23 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 57 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+See [this page](https://suzan.rbind.io/2018/04/dplyr-tutorial-4/#summarise-all-1) for more.
 
 ---
 # After the clean up
@@ -155,7 +197,7 @@ pb_clean %&gt;%
   geom_bar(mapping = aes(x = industry))
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
 ---
 # One way...
 
@@ -170,7 +212,7 @@ pb_clean %&gt;%
     coord_flip()
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-8-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Variation. Another way...
@@ -216,7 +258,7 @@ pb_clean %&gt;%
   theme_minimal()
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-10-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-11-1.png" width="50%" style="display: block; margin: auto;" /&gt;
 ---
 
 # Covariation. Discrete and continuous.
@@ -238,7 +280,7 @@ pb_clean %&gt;%
     coord_flip()
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-11-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-12-1.png" width="40%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -253,7 +295,7 @@ pb_clean %&gt;%
     geom_point()
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-12-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-13-1.png" width="40%" style="display: block; margin: auto;" /&gt;
 
 ```r
 cor(pb_clean$PricetoCashFlow, pb_clean$PricetoBook)
@@ -272,7 +314,7 @@ pb_clean %&gt;%
   mutate(count = n()) %&gt;% 
   ungroup() %&gt;% 
   filter(count &gt;= 5) %&gt;%
-  ggplot(mapping = aes(x = PricetoBook, y = roic, color = industry)) +
+  ggplot(mapping = aes(x = roic, y = PricetoBook, color = industry)) +
     geom_point() + 
     geom_text(aes(label = symbol), hjust = 0, vjust = 0, size = 4)
 ```
@@ -285,7 +327,7 @@ pb_clean %&gt;%
 ## Warning: Removed 18 rows containing missing values (geom_text).
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-13-1.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-14-1.png" width="40%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Covariation. Several continuous.
@@ -324,7 +366,7 @@ summary(mod1)
 ---
 class: inverse, center, middle
 # Getting our data tidy
-(Chapter 12. We can't explore if the data is a mess.)
+(Chapter 12. We can't explore if the data are a mess.)
 &lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
 
 
@@ -757,7 +799,7 @@ etf_returns %&gt;%
 ## Warning: Removed 5 rows containing non-finite values (stat_bin).
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-27-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-28-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
@@ -778,7 +820,7 @@ etf_returns %&gt;%
 ## Warning: Removed 5 rows containing non-finite values (stat_bin).
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-28-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-29-1.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
@@ -788,7 +830,7 @@ etf_returns %&gt;%
 ## Warning: Removed 5 rows containing non-finite values (stat_bin).
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-29-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-30-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
@@ -808,7 +850,7 @@ etf_returns %&gt;%
 ## Warning: Removed 5 rows containing non-finite values (stat_density).
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-30-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-31-1.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 
 

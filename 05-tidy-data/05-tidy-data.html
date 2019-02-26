@@ -41,7 +41,7 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project. Then do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec5.r`. Add the data files to your `data` folder that lives in the course folder. Then, run the code below at the top of your R Script to get started.
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec5.r`. Add the data files to your **data** folder that lives in the course folder. Then, run the code below at the top of your R Script to get started. The script file needs to be in the same folder as your **data** folder
 
 
 ```r
@@ -112,7 +112,7 @@ pb_clean &lt;- pb %&gt;%
 ---
 # Cleaning up missing values
 
-Did you see how *ROE* and *ROIC* got brought in as &lt;chr&gt; strings? Strange! But - Factset uses "#N/A" to denote missing values. `read_csv` saw these and thought that they were text, so it treated the whole variable as text. Let's fix this.
+Did you see how *roe* and *roic* got brought in as &lt;chr&gt; strings? Strange! But - Factset uses "#N/A" to denote missing values. `read_csv` saw these and thought that they were text, so it treated the whole variable as text. Let's fix this.
 
 `dplyr::na_if` swaps out whatever value you give it for true NAs. `as.numeric` tells R to treat the column as a numerical value. With the real NA values in place, the whole column is actually numeric, so R can do this switch. The fancy term for this is **type coercion**. 
 
@@ -185,7 +185,7 @@ glimpse(pb_clean)
 ## $ roic            &lt;dbl&gt; 0.9, 4.1, 3.4, 6.1, 0.8, 7.8, 2.2, NA, 4.6, 4.1,…
 ```
 
-Looking good! *Industry* is now a factor and *ROE* and *ROIC* are numeric with proper NA values. See Chapter 7.4 for a little more on NA or missing values. `is.na` is a very useful function.
+Looking good! *industry* is now a factor and *roe* and *roic* are numeric with proper NA values. See Chapter 7.4 for a little more on NA or missing values. `is.na` is a very useful function.
 
 ---
 # Variation. Yikes!
@@ -201,7 +201,7 @@ pb_clean %&gt;%
 ---
 # One way...
 
-I am using `forcats::fct_lump` to collapse the least common factors into *other*.
+I am using `forcats::fct_lump` to collapse the least common factors into *other*. Why did it give me six categories, when I asked for five? Two have the same number of observations, so it gave me both. See [https://forcats.tidyverse.org/reference/fct_lump.html](https://forcats.tidyverse.org/reference/fct_lump.html)
 
 
 ```r
@@ -212,7 +212,7 @@ pb_clean %&gt;%
     coord_flip()
 ```
 
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-9-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Variation. Another way...
@@ -381,7 +381,7 @@ But our data doesn't always look like this. Let's look at **Chapter 12** of our 
 
 Many of these notes come from [https://moderndive.com/4-tidy.html](https://moderndive.com/4-tidy.html), which is also covers the material found in our text.
 
-We are going to discuss **three important concepts**: gathering, spreading, and missing values.
+We are going to discuss **three important concepts**: gathering, spreading, and a little more on missing values.
 
 ---
 # Some untidy stock data
@@ -452,7 +452,7 @@ stocks_tidy &lt;- stocks %&gt;%
   gather(`Stock Name`, `Stock Price`, -Date)
 ```
 
-The `stocks` data had 5 observations and 4 variables. The `stocks_tidy` data has 15 observations and 3 variables.
+The `stocks` data had 5 observations and 4 variables. The `stocks_tidy` data has 15 observations and 3 variables. Using the single quotes let's you have spaces in the variable names.
 
 ---
 
@@ -579,7 +579,7 @@ The `gather` function in the tidyr package can complete this task for us. I am p
 
 You could include variables by just listing them (see the text).
 
-Note that you **do not** need to include `key = ` or `value = `. I've done so for readability and suggest that you do to until you get the hang of things.
+Note that you **do not** need to include `key = ` or `value = `. I've done so for readability and suggest that you do too until you get the hang of things.
 
 ---
 # Using `gather` (cont.)
@@ -601,7 +601,7 @@ glimpse(etf_returns)
 
 ---
 # Calculating returns
-Let's `group_by` asset and use `mutate` to calculate log returns. Note that `lag` function. We can then drop the price variable.
+Let's `group_by` asset and use `mutate` to calculate log returns. Note that `lag` function. We can then drop the price variable, since we don't need it anymore.
 
 
 ```r

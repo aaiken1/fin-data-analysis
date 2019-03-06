@@ -443,7 +443,7 @@ counter-reset: subitem;
 
 
 <h1 class="title toc-ignore">Lab 04 - Business Locations</h1>
-<h3 class="subtitle"><em>A First Look at Spatial Data</em></h3>
+<h3 class="subtitle"><em>Another Look at Spatial Data</em></h3>
 
 
 
@@ -454,19 +454,23 @@ counter-reset: subitem;
 </p>
 <p><label for="tufte-mn-1" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-1" class="margin-toggle"><span class="marginnote"><span style="display: block;">I got a chance to see Mitch Hedberg in Durham many years ago now.</span></span></p>
 <p>First, thanks to <a href="http://www2.stat.duke.edu/~mc301/">Dr. Mine Çetinkaya-Rundel</a> of Duke for making this assignment available. I’ve made some edits to fit with the themes of our class, but the topic was too much fun to pass up.</p>
-<p>Have you ever taken a road trip in the US and thought to yourself “I wonder what La Quinta means?”. Well, the late comedian <a href="https://en.wikipedia.org/wiki/Mitch_Hedberg">Mitch Hedberg</a> thinks it’s Spanish for <em>next to Denny’s</em>.</p>
+<p>Have you ever taken a road trip in the U.S. and thought to yourself “I wonder what La Quinta means?”. Well, the late comedian <a href="https://en.wikipedia.org/wiki/Mitch_Hedberg">Mitch Hedberg</a> thought it was Spanish for <em>next to Denny’s</em>.</p>
 <p>If you’re not familiar with these two establishments, <a href="https://www.dennys.com/">Denny’s</a> is a casual diner chain that is open 24 hours and <a href="http://www.lq.com/">La Quinta Inn and Suites</a> is a hotel chain.</p>
 <p>These two establishments tend to be clustered together, or at least this observation is a joke made famous by Mitch Hedberg. In this lab, we explore the validity of this joke and along the way learn some more data wrangling and tips for visualizing spatial data.</p>
 <p>Note that these data were scraped from <a href="https://locations.dennys.com/">here</a> and <a href="https://www.lq.com/en/findandbook/hotel-listings.html">here</a>, respectively.</p>
-<p>Think about how much business data is spatial. Where <strong>do</strong> firms locate? Where <strong>should</strong> firms locate? In finance, we often think about links between customers, suppliers, and the firm. These links can be spatial. We might even be able to use this information <a href="https://onlinelibrary.wiley.com/doi/10.1111/j.1540-6261.2006.00895.x">to predict stock returns</a>.</p>
-<p><label for="tufte-mn-2" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-2" class="margin-toggle"><span class="marginnote"><span style="display: block;"><strong>A note on expectations: </strong> For each lab, your HTML notebook file should include any relevant output (tables, summary statistics, plots). To get this, be sure that you are using an R Notebook. Place any relevant R code in a code chunk, and hit Preview. Your team will submit the HTML notebook to Moodle.</span></span></p>
+<p>Think about how much business data is spatial. Where <strong>do</strong> firms locate? Where <strong>should</strong> firms locate? In finance, we often think about links between customers, suppliers, and the firm. These links can be spatial. We might even be able to use this information <a href="https://onlinelibrary.wiley.com/doi/10.1111/j.1540-6261.2006.00895.x">to explain why certain stock price move together</a>.</p>
+<p>At the end of the lab, I’ll show you how to import some stock prices and we’ll practice a few <code>lubridate</code> and <code>tidyr</code> functions.</p>
+<p><label for="tufte-mn-2" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-2" class="margin-toggle"><span class="marginnote"><span style="display: block;"><strong>A note on expectations: </strong> For each lab, your HTML notebook file should include any relevant output (tables, summary statistics, plots). To get this, be sure that you are using an R Notebook. Place any relevant R code in a code chunk, and hit Preview. Your team will submit the HTML notebook to Moodle. Write up your results using Markdown.</span></span></p>
 <div id="getting-set-up" class="section level1">
 <h1>Getting set up</h1>
 <div id="packages" class="section level2">
 <h2>Packages</h2>
-<p>We will again work with the <code>tidyverse</code> package. We start by loading the packages. Create an R chunk called set-up.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a></code></pre></div>
-<p>Note that these packages are also loaded in your R Markdown document. We will be using <code>dplyr</code> functions today, along with more <code>ggplot</code>.</p>
+<p>We will again work with the <code>tidyverse</code> package. You’ll also need the <code>lubrudate</code>, <code>mapproj</code> and <code>tidyquant</code> packages. You’ll have to install these three, since we haven’t used it yet. We start by loading the packages. Create an R chunk called set-up.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(lubridate)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(mapproj)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">library</span>(tidyquant)</a></code></pre></div>
+<p>We will be using <code>dplyr</code> functions today, along with more <code>ggplot</code>. We’ll use <code>tidyquant</code> at the very end to bring in some stock data for a <code>lubridate</code> and <code>tidyr</code> example.</p>
 </div>
 <div id="project-name" class="section level2">
 <h2>Project name</h2>
@@ -482,7 +486,7 @@ counter-reset: subitem;
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">dn &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;data/dennys.csv&quot;</span>)</a>
 <a class="sourceLine" id="cb2-2" data-line-number="2">lq &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;data/laquinta.csv&quot;</span>)</a>
 <a class="sourceLine" id="cb2-3" data-line-number="3">states &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;data/states.csv&quot;</span>)</a></code></pre></div>
-<p>One file contains Dennys’ locations, while other has information for La Quinta Inns. To help with our analysis we will also use a dataset on US states.</p>
+<p>One file contains Dennys’ locations, while other has information for La Quinta Inns. To help with our analysis, we will also use a dataset on U.S. states.</p>
 </div>
 </div>
 <div id="our-questions" class="section level1">
@@ -493,7 +497,7 @@ counter-reset: subitem;
 <ol style="list-style-type: decimal">
 <li>What are the dimensions of the Denny’s dataset?</li>
 </ol>
-<p>Hint: Use functions like <code>nrow</code> and <code>ncol</code> to compose your answer. Use what is called in-line R code. Don’t create a chunk. Instead, write your regular Markdown and, when you want at number, do , where you put the code you want inside the <code></code>. This will put the result of that code in-line with your text. Why do this? If you data changes, you don’t have the go and change your text!</p>
+<p>Hint: Use functions like <code>nrow</code> and <code>ncol</code> to compose your answer. Use what is called in-line R code. Don’t create a chunk. Instead, write your regular Markdown and, when you want a number, do `<code>r</code> #code`, where you put the code you want inside the single apostrophes (see Chapter 27.4.6 of our book). This will put the result of that code in-line with your text. Why do this? If your data changes, you don’t have the go and change your text!</p>
 <p>What does each row in the dataset represent? What are the variables?</p>
 <ol start="2" style="list-style-type: decimal">
 <li>Using the same technique, what are the dimensions of the La Quinta’s dataset? What does each row in the dataset represent? What are the variables?</li>
@@ -513,10 +517,10 @@ counter-reset: subitem;
 <ol start="5" style="list-style-type: decimal">
 <li>Add a country variable to the Denny’s dataset and set all observations equal to <code>&quot;United States&quot;</code>. Remember, you can use the <code>mutate</code> function for adding a variable. Make sure to save the result of this as <code>dn</code> again so that the stored data frame contains the new variable going forward.</li>
 </ol>
-<p><label for="tufte-mn-3" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-3" class="margin-toggle"><span class="marginnote"><span style="display: block;">We don’t need to tell R how many times to repeat the character string “United States” to fill in the data for all observations, R takes care of that automatically.</span></span></p>
+<p><label for="tufte-mn-3" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-3" class="margin-toggle"><span class="marginnote"><span style="display: block;">We don’t need to tell R how many times to repeat the character string “United States” to fill in the data for all observations. R takes care of that automatically.</span></span></p>
 <ol start="6" style="list-style-type: decimal">
-<li><p>Find the La Quinta locations that are outside the US, and figure out which country they are in. This might require some googling. Take notes, you will need to use this information in the next exercise.</p></li>
-<li><p>Add a country variable to the La Quinta dataset. Use the <code>case_when</code> function to populate this variable. You’ll need to refer to your notes from Exercise 6 about which country the non-US locations are in. Here is some starter code to get you going:</p></li>
+<li><p>Find the La Quinta locations that are outside the US, and figure out which country they are in. This might require some Googling. Take notes, you will need to use this information in the next exercise.</p></li>
+<li><p>Add a country variable to the La Quinta dataset. Use the <code>case_when</code> function to populate this variable. You’ll need to refer to your notes from Exercise 6 about which countries the non-US locations are in. Here is some starter code to get you going:</p></li>
 </ol>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">lq <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb4-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">country =</span> <span class="kw">case_when</span>(</a>
@@ -531,9 +535,9 @@ counter-reset: subitem;
 <p><span class="newthought">Going forward</span> we will work with the data from the United States only. All Denny’s locations are in the United States, so we don’t need to worry about them. However, we do need to filter the La Quinta dataset for locations in United States. Do this and replace your <code>lq</code> tibble.</p>
 <ol start="8" style="list-style-type: decimal">
 <li><p>Which states have the most and fewest Denny’s locations? What about La Quinta? Is this surprising? Why or why not? Use the <code>count()</code> function.</p></li>
-<li><p>Next, let’s calculate which states have the most Denny’s locations <em>per thousand square miles</em>. This requires <em>join</em>ining information from a frequency table like you created in Exercise 9 with information from the <code>states</code> data frame.</p></li>
+<li><p>Next, let’s calculate which states have the most Denny’s locations <em>per thousand square miles</em>. This requires <em>join</em>ining information from a frequency table like you created in Exercise 8 with information from the <code>states</code> data frame.</p></li>
 </ol>
-<p>First, we count how many observations are in each state, which will give us a data frame with two variables: <code>state</code> and <code>n</code>. Then, we join this data frame with the <code>states</code> data frame. However, note that the variables in the <code>states</code> data frame that has the two-letter abbreviations is called <code>abbreviation</code>. So, when we’re joining the two data frames, we specify that the <code>state</code> variable from the Denny’s data should be matched <code>by</code> the <code>abbreviation</code> variable from the <code>states</code> data:</p>
+<p>First, we count how many observations are in each state, which will give us a data frame with two variables: <code>state</code> and <code>n</code>. Then, we join this data frame with the <code>states</code> data frame. However, note that the variable in the <code>states</code> data frame that has the two-letter abbreviations is called <code>abbreviation</code>. So, when we’re joining the two data frames, we specify that the <code>state</code> variable from the Denny’s data should be matched <code>by</code> the <code>abbreviation</code> variable from the <code>states</code> data:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">dn <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="st">  </span><span class="kw">count</span>(state) <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb5-3" data-line-number="3"><span class="st">  </span><span class="kw">inner_join</span>(states, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;state&quot;</span> =<span class="st"> &quot;abbreviation&quot;</span>))</a></code></pre></div>
@@ -541,7 +545,7 @@ counter-reset: subitem;
 <p><strong>What does an <code>inner_join</code> do?</strong></p>
 <ol start="10" style="list-style-type: decimal">
 <li><p>Which states have the most Denny’s locations per <strong>thousand square miles</strong>? What about La Quinta? Call the two variables you create <code>dn_density</code> and <code>lq_density</code>.</p></li>
-<li><p>Next, we put the two datasets together into a single data frame. However before we do so, we need to add an identifier variable. We’ll call this <code>establishment</code> and set the value to <code>&quot;Denny's&quot;</code> and <code>&quot;La Quinta&quot;</code> for the <code>dn</code> and <code>lq</code> data frames, respectively.</p></li>
+<li><p>Next, we put the two datasets together into a single data frame. However, before we do so, we need to add an identifier variable. We’ll call this <code>establishment</code> and set the value to <code>&quot;Denny's&quot;</code> and <code>&quot;La Quinta&quot;</code> for the <code>dn</code> and <code>lq</code> data frames, respectively.</p></li>
 </ol>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">dn &lt;-<span class="st"> </span>dn <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb6-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">establishment =</span> <span class="st">&quot;Denny's&quot;</span>)</a>
@@ -553,22 +557,47 @@ counter-reset: subitem;
 </div>
 <div id="making-maps" class="section level2">
 <h2>Making maps</h2>
+<p>The following four questions ask you to create visualizations. These should follow best practices you learned in class, such as informative titles, axis labels, etc. See <a href="http://ggplot2.tidyverse.org/reference/labs.html" class="uri">http://ggplot2.tidyverse.org/reference/labs.html</a> for help with the syntax. You can also choose different themes to change the overall look of your plots, see <a href="http://ggplot2.tidyverse.org/reference/ggtheme.html" class="uri">http://ggplot2.tidyverse.org/reference/ggtheme.html</a> for help with these.</p>
 <ol start="12" style="list-style-type: decimal">
 <li>We can plot the locations of the two establishments using a scatter plot, and color the points by the establishment type. Note that the latitude is plotted on the x-axis and the longitude on the y-axis.</li>
 </ol>
-<p>The following two questions ask you to create visualizations. These should follow best practices you learned in class, such as informative titles, axis labels, etc. See <a href="http://ggplot2.tidyverse.org/reference/labs.html" class="uri">http://ggplot2.tidyverse.org/reference/labs.html</a> for help with the syntax. You can also choose different themes to change the overall look of your plots, see <a href="http://ggplot2.tidyverse.org/reference/ggtheme.html" class="uri">http://ggplot2.tidyverse.org/reference/ggtheme.html</a> for help with these.</p>
 <p><strong>Do you see a shape that you recognize?</strong></p>
 <ol start="13" style="list-style-type: decimal">
 <li><p>Filter the data for observations in North Carolina only, and recreate the plot. You should also adjust the transparency of the points, by setting the <code>alpha</code> level, so that it’s easier to see the overplotted ones. Visually, does Mitch Hedberg’s joke appear to hold here?</p></li>
 <li><p>Now filter the data for observations in Texas only, and recreate the plot, with an appropriate <code>alpha</code> level. Visually, does Mitch Hedberg’s joke appear to hold here?</p></li>
-<li><p>OK, now for some fun. Install the <code>mapproj</code> package and call it with <code>library</code>. You do this here if you like. You’ll need some data from this package:</p></li>
+<li><p>OK, now for some fun. You have installed the <code>mapproj</code> package and loaded it with <code>library</code>. You’ll need some data from this package:</p></li>
 </ol>
+<p><label for="tufte-mn-4" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-4" class="margin-toggle"><span class="marginnote"><span style="display: block;">Since we’re making maps, here’s another Hedberg joke: <em>I wanna hang a map of the world in my house. Then I’m gonna put pins into all the locations that I’ve traveled to. But first, I’m gonna have to travel to the top two corners of the map, so it won’t fall down.</em></span></span></p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">all_states &lt;-<span class="st"> </span><span class="kw">map_data</span>(<span class="st">&quot;state&quot;</span>)</a></code></pre></div>
-<p>This pulls in coordinate data for all of the states. We are going to use this draw a map.</p>
-<p>Next, create a new data frame from <code>dn_lq</code> that has just the lower 48 states.</p>
+<p>This pulls in coordinate data for all of the states. We are going to use this to draw a map.</p>
+<p>Next, create a new data frame from <code>dn_lq</code> that has just the locations from the lower 48 states.</p>
 <p>Finally, use ggplot to <strong>layer</strong> two plots on top of each other. The first plot is actually a map of the lower 48 states created using the all_states data frame (look inside it to see what it has). Here’s the code to do that:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">geom_polygon</span>(<span class="dt">data =</span> all_states, <span class="kw">aes</span>(<span class="dt">x =</span> long, <span class="dt">y =</span> lat, <span class="dt">group =</span> group), <span class="dt">colour =</span> <span class="st">&quot;grey10&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;white&quot;</span>)</a></code></pre></div>
 <p>Then, add the locations using the code you wrote above. You should get a map of the U.S. with the dots for each location on it.</p>
+</div>
+<div id="one-more-thing" class="section level2">
+<h2>One more thing</h2>
+<ol start="16" style="list-style-type: decimal">
+<li>We should practice some of our <code>date</code> and <code>tidyr</code> commands, discussed in <a href="https://r4ds.had.co.nz/tidy-data.html">Chapter 16</a> and <a href="https://r4ds.had.co.nz/tidy-data.html">Chapter 12</a> of our textbook, respectively. We’ve only mentioned a few of the things we can do.</li>
+</ol>
+<p>To do this, I want to show you the <code>tidyquant</code> package, which we will talk about after spring break. This package takes many of the traditional finance packages (e.g. <code>xts</code>) and puts them together in a “tidy” way.</p>
+<p><label for="tufte-mn-5" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-5" class="margin-toggle"><span class="marginnote"><span style="display: block;">You can read more about <code>tidyquant</code> on their <a href="https://github.com/business-science/tidyquant">github page</a>.</span></span></p>
+<p>Let’s pull stock prices since 2010 for the “FAANG” stocks and save it to a tibble called prices. We can use the <code>tq_get</code> function from the <code>tidyquant</code> package to do this. This function pulls data from Yahoo! Finance. There are other functions that you can use to pull data from other sources, such as the FRED database.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">tickers &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;FB&quot;</span>, <span class="st">&quot;AAPL&quot;</span>, <span class="st">&quot;AMZN&quot;</span>, <span class="st">&quot;NFLX&quot;</span>, <span class="st">&quot;GOOG&quot;</span>)</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">prices  &lt;-<span class="st"> </span><span class="kw">tq_get</span>(tickers, <span class="dt">get =</span> <span class="st">&quot;stock.prices&quot;</span>, <span class="dt">from =</span> <span class="st">&quot;2010-01-01&quot;</span>)</a></code></pre></div>
+<p><label for="tufte-mn-6" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-6" class="margin-toggle"><span class="marginnote"><span style="display: block;">What’s an adjusted closing price? You can read about it <a href="https://help.yahoo.com/kb/SLN28256.html">here</a>.</span></span> Because we are using <code>tidyquant</code>, the data is already nice and tidy. We call this type of data “long”. Using this data frame of prices, do the following within one set of pipes (%&gt;%):</p>
+<ul>
+<li>Add year and month variables to the data set.</li>
+<li>Use <code>summarise</code> to calculate average adjusted closing price <strong>by</strong> symbol, year, and month. Hint: Remember to ungroup() when done.</li>
+<li>Make this data “long” using the <code>spread</code> function. Think about what values you want for columns and what data you want in these columns.</li>
+<li>Save this “wide” data as “prices_wide”.</li>
+</ul>
+<p>That’s the end of the piped commands. Finally, use the <code>summary</code> function on your new data frame. This is a Base R function that will give you a little summary for each variable in your data frame. <strong>Do you see any stocks with missing price values? Can you get a summary for just one column?</strong></p>
+<p><label for="tufte-mn-7" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-7" class="margin-toggle"><span class="marginnote"><span style="display: block;">Remember, when using pipes, the data frame is being passed through. So, you don’t need to specify the data frame each time. You can just use the variable name. But, with Base R, you need to specify the data frame (or vector, matrix, etc.) and the variable (column). You use “$” to do this.</span></span></p>
+</div>
+<div id="and-thats-it" class="section level2">
+<h2>And that’s it!</h2>
+<p>The next lab will include more work on dates and writing your own function.</p>
 <p><strong>Please turn in one R Notebook HTML file per group. Be sure that all of you names are on it!</strong></p>
 </div>
 </div>

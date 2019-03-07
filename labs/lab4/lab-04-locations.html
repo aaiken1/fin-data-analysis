@@ -588,8 +588,8 @@ counter-reset: subitem;
 <p><label for="tufte-mn-6" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-6" class="margin-toggle"><span class="marginnote"><span style="display: block;">What’s an adjusted closing price? You can read about it <a href="https://help.yahoo.com/kb/SLN28256.html">here</a>.</span></span> Because we are using <code>tidyquant</code>, the data is already nice and tidy. We call this type of data “long”. Using this data frame of prices, do the following within one set of pipes (%&gt;%):</p>
 <ul>
 <li>Add year and month variables to the data set.</li>
-<li>Use <code>summarise</code> to calculate average adjusted closing price <strong>by</strong> symbol, year, and month. Hint: Remember to ungroup() when done.</li>
-<li>Make this data “long” using the <code>spread</code> function. Think about what values you want for columns and what data you want in these columns.</li>
+<li>Use <code>summarise</code> to calculate average adjusted closing price <strong>by</strong> symbol, year, and month. Hint: Remember to ungroup() when done. You won’t seen anything change with your data. The ungrouping means that any subsequent calculations with the data <strong>won’t</strong> be done by group.</li>
+<li>Make this data “wide” using the <code>spread</code> function. Think about what values you want for columns and what data you want in these columns.</li>
 <li>Save this “wide” data as “prices_wide”.</li>
 </ul>
 <p>That’s the end of the piped commands. Finally, use the <code>summary</code> function on your new data frame. This is a Base R function that will give you a little summary for each variable in your data frame. <strong>Do you see any stocks with missing price values? Can you get a summary for just one column?</strong></p>

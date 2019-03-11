@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 7-2: Conditionals and Iteration</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 7-2: Conditionals and Iteration
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+# Quick Review - Coding Style
+(More on what good code looks like.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec72.r`. No data for this lecture - we will create our own where needed.
+
+
+```r
+library(tidyverse)
+```
+
+You will also see a little bit about functions in the **Intermediate R for Finance** DataCamp module. [Chapter 21](https://r4ds.had.co.nz/iteration.html#introduction-14) of our textbook covers loops and itertation. There are some powerful tools in that chapter, such as `purrr` that are the `tidy` way to do the `apply` functions covered in DataCamp. 
+
+---
+
+# Style guide
+
+&gt;"Good coding style is like correct punctuation: you can manage without it, butitsuremakesthingseasiertoread."
+&gt;
+&gt;Hadley Wickham
+
+- Style guide for this course is based on the Tidyverse style guide: http://style.tidyverse.org/
+- There's more to it than what we'll cover today, but we'll mention more as we introduce more functionality, and do a recap later in the semester
+
+---
+# More on names
+
+### File names and code chunk labels
+
+- Do not use spaces in file names, use `-` or `_` to separate words
+- Use all lowercase letters
+
+.code-small[
+
+```r
+# Good
+stock-returns.csv
+
+# Bad
+Stock Returns.csv
+```
+]
+
+### Object names
+
+- Use `_` to separate words in object names
+- Use informative but short object names
+- Do not reuse object names within an analysis
+
+.code-small[
+
+```r
+# Good
+acs_employed
+
+# Bad
+acs.employed
+acs2
+```
+]
+---
+
+# Spacing
+
+- Put a space before and after all infix operators (=, +, -, &lt;-, etc.), and when naming arguments in function calls. 
+- Always put a space after a comma, and never before (just like in regular English).
+
+
+```r
+# Good
+average &lt;- mean(feet / 12 + inches, na.rm = TRUE)
+
+# Bad
+average&lt;-mean(feet/12+inches,na.rm=TRUE)
+```
+
+- Limit your code to 80 characters per line. This fits comfortably on a printed page with a reasonably sized font.
+- Take advantage of RStudio editor's auto formatting for indentation at line breaks.
+
+---
+
+# ggplot
+
+- Always end a line with `+`
+- Always indent the next line
+
+
+```r
+# Good
+ggplot(diamonds, mapping = aes(x = price)) +
+  geom_histogram()
+
+# Bad
+ggplot(diamonds,mapping=aes(x=price))+geom_histogram()
+```
+
+---
+
+# Quotes
+
+Use `"`, not `'`, for quoting text. The only exception is when the text already contains double quotes and no single quotes.
+
+
+```r
+ggplot(diamonds, mapping = aes(x = price)) +
+  geom_histogram() +
+  # Good
+  labs(title = "`Shine bright like a diamond`",
+  # Good
+       x = "Diamond prices",
+  # Bad
+       y = 'Frequency')
+```
+
+
+---
+class: inverse, center, middle
+# Conditionals and Iteration
+(A few more "advanced" topics.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Conditionals and Iteration in R
+
+A **conditional statement** will take the form of: IF TRUE, THEN DO THIS, ELSE DO THAT. Using tools like `dplyr` make this less common that in the past.
+
+We also want to reduce **duplication** in our R code, espectially as we get more advanced. One tool for reducing duplication is **functions**, which reduce duplication by identifying repeated patterns of code and extract them out into independent pieces that can be easily reused and updated. Another tool for reducing duplication is **iteration**, which helps you when you need to do the same thing to multiple inputs: repeating the same operation on different columns, or on different datasets. 
+
+The traditional way to do iteration in programing is through **loops**. We will also talk about some R specific ways to iterate. These are called `funcational` in the text. Examples include the `apply` family of functions from DataCamp and the `purrr` package. The latter takes some getting use to, so don't worry if it seems strange at first.
+
+
+
+
+---
+# IF Statement
+
+
+```r
+random &lt;- rnorm(1)
+if(random &gt; 0){
+  print(c(random, "is pretty big"))
+} else
+{print(c(random, "is pretty small"))}
+```
+
+```
+## [1] "-0.451806226868241" "is pretty small"
+```
+
+From DataCamp, you may have noticed that `IF` + `subset()` is basically a `ddplyr::filter`. `ddplyr` has there own IF statements, such as `if_else`. These are easy to use as part of a %&gt;%.
+
+If you start to have a bunch of `IF` statements, probably worth thinking more about what you're trying to do.
+---
+
+# Looping with FOR
+This is **old school R**. Generate 45 days of log returns from normal distribution. Count number of times the price gets below 950,000. Let's do this 100,000 times.
+
+
+```r
+niter &lt;- 100000  # Number of Iterations is 100,000
+below &lt;- rep(0, niter)  # Set up storage
+set.seed(2009)
+
+for (i in 1:niter) {
+	r &lt;- rnorm(45, mean = 0.05/253, sd = .23/sqrt(253))
+	log.Price &lt;- log(1000000) + cumsum(r)
+	min.log.Price &lt;- min(log.Price) 
+	below[i] &lt;- as.numeric(exp(min.log.Price) &lt; 950000) 
+}
+
+a &lt;- mean(below)
+a
+```
+
+```
+## [1] 0.50988
+```
+
+DataCamp covers `repeate` and `while` loops. Looping over a list can be helpful.
+
+---
+class: inverse, center, middle
+# Functional Methods
+(purrr, map, and apply)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# The purrr package
+`For` loops are not as important in R as they are in other languages because R is a functional programming language. This means that it’s possible to wrap up for loops in a function, and call that function instead of using the for loop directly.
+
+Let's start with the `map` functions from the `purrr` package. This is the `tidy` way to avoid looping. In the DataCamp lectures, they cover the older, but still used, `apply` family of functions.
+
+The goal of using `purrr` functions instead of for loops is to allow you break common list manipulation challenges into independent pieces:
+
+1. How can you solve the problem for a single element of the list? Once you’ve solved that problem, `purrr` takes care of generalising your solution to every element in the list.
+
+2. If you’re solving a complex problem, how can you break it down into bite-sized pieces that allow you to advance one small step towards a solution? With `purrr`, you get lots of small pieces that you can compose together with the pipe.
+
+---
+# The purrr package (cont.)
+The pattern of looping over a vector, doing something to each element and saving the results is so common that the purrr package provides a family of functions to do it for you. There is one function for each type of output:
+
+- map() makes a list.
+- map_lgl() makes a logical vector.
+- map_int() makes an integer vector.
+- map_dbl() makes a double vector.
+- map_chr() makes a character vector.
+- map_if() can do conditionals.
+
+You give **map** a function (e.g. mean). It will then do that over all of the specified columns (variables). So, a lot like a loop!
+
+
+---
+# The purrr package (cont.)
+
+```r
+knitr::include_graphics("img/purr.png")
+```
+
+&lt;img src="img/purr.png" width="600px" style="display: block; margin: auto;" /&gt;
+
+---
+# The purrr package (cont.)
+
+
+```r
+means &lt;- house %&gt;%
+  select_if(is.numeric) %&gt;%
+  map_dbl(mean)
+means
+```
+
+```
+##         price      bedrooms     bathrooms   sqft_living      sqft_lot 
+##  5.400881e+05  3.370842e+00  2.114757e+00  2.079900e+03  1.510697e+04 
+##        floors    waterfront          view     condition         grade 
+##  1.494309e+00  7.541757e-03  2.343034e-01  3.409430e+00  7.656873e+00 
+##    sqft_above sqft_basement      yr_built  yr_renovated       zipcode 
+##  1.788391e+03  2.915090e+02  1.971005e+03  8.440226e+01  9.807794e+04 
+##           lat          long sqft_living15    sqft_lot15 
+##  4.756005e+01 -1.222139e+02  1.986552e+03  1.276846e+04
+```
+
+---
+# The purrr package (cont.)
+
+```r
+missings &lt;- house %&gt;%
+  map_dbl(~sum(is.na(.)))
+missings
+```
+
+```
+##            id          date         price      bedrooms     bathrooms 
+##             0             0             0             0             0 
+##   sqft_living      sqft_lot        floors    waterfront          view 
+##             0             0             0             0             0 
+##     condition         grade    sqft_above sqft_basement      yr_built 
+##             0             0             0             0             0 
+##  yr_renovated       zipcode           lat          long sqft_living15 
+##             0             0             0             0             0 
+##    sqft_lot15 
+##             0
+```
+
+We need the `.` and the `~` here. See [this Stack Overflow page](https://stackoverflow.com/questions/44834446/what-is-meaning-of-first-tilde-in-purrrmap) for more on this syntax. The `~` let's us "write" a function inside the `map` function. The `.` is a placeholder for all of the columns that will be arguments of that function. Here's what cool - this code will work for any data frame with numeric data. Note that there's nothing about variable names!
+
+---
+# The purrr package (cont.)
+
+Let's run a simple regression on our housing data for the non-waterfront homes. Note that I am putting all of this into m1 (a list which contains the output from the regression), but that I'm doing this at **the end of the pipe**. You can do this too! 
+
+.code-small[
+
+```r
+house %&gt;%
+  filter(waterfront == 0) %&gt;%
+  lm(log(price) ~ log(sqft_living), data = .) -&gt; m1
+
+summary(m1)
+```
+
+```
+## 
+## Call:
+## lm(formula = log(price) ~ log(sqft_living), data = .)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.10817 -0.29077  0.01523  0.25760  1.34772 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)       6.83817    0.04680   146.1   &lt;2e-16 ***
+## log(sqft_living)  0.82169    0.00619   132.7   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3832 on 21448 degrees of freedom
+## Multiple R-squared:  0.451,	Adjusted R-squared:  0.451 
+## F-statistic: 1.762e+04 on 1 and 21448 DF,  p-value: &lt; 2.2e-16
+```
+
+```r
+summary(m1)$coefficients[2,3]
+```
+
+```
+## [1] 132.7358
+```
+]
+
+---
+# The purrr package (cont.)
+
+Let's `split` our data into two groups by the *waterfront* variable. Then we'll use map to run a regression on each group. The output is too large to show on the slide.
+
+
+```r
+house %&gt;%
+  split(.$waterfront) %&gt;%
+  map(~ lm(log(price) ~ log(sqft_living), data = .)) %&gt;%
+  map(summary)
+```
+
+
+---
+# The apply functions
+
+These are covered a little bit in the **Intermediate R for Finance** DataCamp. I don't want to go into great detail, but again be aware that these things exist. We'll look at the basic `apply` first. Remember, this is not `tidyverse` - it is older R.
+
+apply(X, MARGIN, FUN)
+- x: a data frame or matrix
+- MARGIN:  take a value or range between 1 and 2 to define where to apply the function
+  - MARGIN=1: the manipulation is performed on rows
+  - MARGIN=2: the manipulation is performed on columns
+  - MARGIN=c(1,2) the manipulation is performed on rows and columns
+- FUN: tells which function to apply. Built-in functions like mean, median, sum, min, max and even user-defined functions can be applied.
+
+---
+# The apply functions (cont.)
+
+Let's try a simple `apply` on the housing data. We'll mix in some `tidyverse`.
+
+
+```r
+house %&gt;%
+  select(bedrooms, bathrooms) %&gt;%
+  apply(., 2, mean) # the . is in place of the data frame
+```
+
+```
+##  bedrooms bathrooms 
+##  3.370842  2.114757
+```
+
+
+```r
+house %&gt;%
+  select(bedrooms, bathrooms) %&gt;%
+  apply(., 2, function(x) sum(is.na(.))) 
+```
+
+```
+##  bedrooms bathrooms 
+##         0         0
+```
+
+---
+# The apply functions (cont.)
+
+Let's try `lapply`. This one returns a `list` and doesn't need the `margin`. It will just work for each column. A `list` is another type of object in R that can contain multiple things. This example takes every column in tickers and does the `tolower` function to all elements in that column. There are 4 columns, but only 1 element in each column.
+
+
+```r
+tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
+tickers_lower &lt;-lapply(tickers, tolower)
+glimpse(tickers_lower)
+```
+
+```
+## List of 4
+##  $ : chr "aapl"
+##  $ : chr "nflx"
+##  $ : chr "msft"
+##  $ : chr "ibm"
+```
+
+---
+# The apply functions (cont.)
+
+Let's try `sapply`. This one returns a `vector` and also doesn't need the `margin`. It will just work for each column. See the DataCamp lecture for more `sapply` and `vapply`. They are all very similar. There are slight differences in syntax and in what is returned after the functions are run(e.g. vector vs. list).
+
+
+```r
+tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
+tickers_lower &lt;-sapply(tickers, tolower)
+glimpse(tickers_lower) 
+```
+
+```
+##  Named chr [1:4] "aapl" "nflx" "msft" "ibm"
+##  - attr(*, "names")= chr [1:4] "AAPL" "NFLX" "MSFT" "IBM"
+```
+
+---
+# A last word
+
+You can do a lot more with these ideas, but they quickly go beyond the scope of this semester. This important point: **remember that they exist, as you may see them used when you look for help online.** Why use them? If you find your self repeating code.
+
+But, correct code &gt;&gt;&gt; efficient code at this point. 
+
+### For next class...
+- You will work on Lab #5.
+- The **Intermediate R for Finance** DataCamp module is due Monday 3/18 at midnight.
+- More mid-term exam is next week. More details to follow.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

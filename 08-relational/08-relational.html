@@ -41,7 +41,7 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec71.r`. No data for this lecture - we will create our own where needed.
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec08.r`. We will be dealing with two different CSV files today. Each has information on a non-overlapping set of stocks. 
 
 
 ```r
@@ -64,7 +64,7 @@ One of the mainstays of the dplyr package is merging data with the family [join 
 - `semi_join(df1, df2)`
 - `anti_join(df1, df2)`
 
-We are going to use our two stock data sets to learn about how to **join/merge data sets**. The two stocks files contain overlapping, but not identical stocks. One CSV file has valuation measures, while the other contains additional metrics.
+We are going to use our two stock data sets to learn about how to **join/merge data sets**. The two stocks files contain overlapping, but not identical stocks. One CSV file has valuation measures, while the other contains additional metrics. *gvkey* is the stock ID (like a ticker, but better).
 
 --
 

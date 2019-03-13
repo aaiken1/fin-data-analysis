@@ -176,10 +176,11 @@ The traditional way to do iteration in programing is through **loops**. We will 
 
 ```r
 random &lt;- rnorm(1)
-if(random &gt; 0){
+if(random &gt; 0) {
   print(c(random, "is pretty big"))
-} else
-{print(c(random, "is pretty small"))}
+} else {
+  print(c(random, "is pretty small"))
+}
 ```
 
 ```
@@ -413,7 +414,7 @@ Let's try `lapply`. This one returns a `list` and doesn't need the `margin`. It 
 
 ```r
 tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
-tickers_lower &lt;-lapply(tickers, tolower)
+tickers_lower &lt;- lapply(tickers, tolower)
 glimpse(tickers_lower)
 ```
 
@@ -433,7 +434,7 @@ Let's try `sapply`. This one returns a `vector` and also doesn't need the `margi
 
 ```r
 tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
-tickers_lower &lt;-sapply(tickers, tolower)
+tickers_lower &lt;- sapply(tickers, tolower)
 glimpse(tickers_lower) 
 ```
 

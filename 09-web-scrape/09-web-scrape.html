@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 9: A Little Web Scraping</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 9: A Little Web Scraping
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+# Scraping the Web
+(Using Wikipedia as an example.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec09.r`. No data for this lecture - we will create our own where needed.
+
+
+```r
+library(tidyverse)
+library(rvest)
+library(janitor)
+```
+
+`rvest` is for web scraping, while `janitor` will help us clean up our data. Here's another example that inspired today's lecture: http://cmcr-class.rbind.io/blog/2019/03/14/scraping-data/. I do want to stress, though - every web scrape is different. You need to spend time looking at the HTML to figure out what is going on. There's also often a lot of string manipulation, which can be very frustrating.
+---
+
+# Getting our data
+
+
+
+```r
+webpage &lt;- read_html("https://en.wikipedia.org/wiki/S%26P_500_Index")
+
+all_tables &lt;- webpage %&gt;% 
+    html_table(fill=TRUE) 
+
+sp500 &lt;- as_tibble(all_tables[[4]]) 
+```
+
+This code reads in the *entire* HTML file and saves it to *webpage*. Then, we pull out all of the tables. HTML tables are a standard thing and are labeled as such in the code. From inspecting the resulting list, we can see that the fourth item in the list is the table that we want. We then covert this table into a `tibble`.
+
+**Lists** in R are just collections of objects. They are very general, so they can hold very complex things, like multiples pieces of HTML code.
+
+---
+# Looking at what we scraped
+
+
+```r
+glimpse(sp500)
+```
+
+```
+## Observations: 53
+## Variables: 9
+## $ Year                                      &lt;chr&gt; "1970", "1971", "1972"…
+## $ `Change in Index`                         &lt;chr&gt; "0.10%", "10.79%", "15…
+## $ `Total Annual Return Including Dividends` &lt;chr&gt; "4.01%", "14.31%", "18…
+## $ `Value of $1.00 Invested on 1970‑01‑01`   &lt;chr&gt; "$1.04", "$1.19", "$1.…
+## $ `5 Year Annualized Return`                &lt;chr&gt; "-", "-", "-", "-", "−…
+## $ `10 Year Annualized Return`               &lt;chr&gt; "-", "-", "-", "-", "-…
+## $ `15 Year Annualized Return`               &lt;chr&gt; "-", "-", "-", "-", "-…
+## $ `20 Year Annualized Return`               &lt;chr&gt; "-", "-", "-", "-", "-…
+## $ `25 Year Annualized Return`               &lt;chr&gt; "-", "-", "-", "-", "-…
+```
+
+**Yikes.** There's a lot that we will want to fix here. The single quotes indicate that we have variable names with spaces. Bad! Everything is a character. We have dollar signs and percent signs. That "minus" is actually a dash, not -. 
+
+---
+# A useful package: janitor
+`janitor` was built with beginning-to-intermediate R users in mind and is optimized for user-friendliness. Advanced users can already do everything covered here, but they can do it faster with janitor and save their thinking for more fun tasks.
+
+You can read more at: https://github.com/sfirke/janitor
+
+
+```r
+names(sp500)
+```
+
+```
+## [1] "Year"                                   
+## [2] "Change in Index"                        
+## [3] "Total Annual Return Including Dividends"
+## [4] "Value of $1.00 Invested on 1970‑01‑01"  
+## [5] "5 Year Annualized Return"               
+## [6] "10 Year Annualized Return"              
+## [7] "15 Year Annualized Return"              
+## [8] "20 Year Annualized Return"              
+## [9] "25 Year Annualized Return"
+```
+
+```r
+sp500 &lt;- sp500 %&gt;% janitor::clean_names()
+```
+---
+# What did clean_names() do?
+
+
+```r
+glimpse(sp500)
+```
+
+```
+## Observations: 53
+## Variables: 9
+## $ year                                    &lt;chr&gt; "1970", "1971", "1972", …
+## $ change_in_index                         &lt;chr&gt; "0.10%", "10.79%", "15.6…
+## $ total_annual_return_including_dividends &lt;chr&gt; "4.01%", "14.31%", "18.9…
+## $ value_of_1_00_invested_on_1970_01_01    &lt;chr&gt; "$1.04", "$1.19", "$1.41…
+## $ x5_year_annualized_return               &lt;chr&gt; "-", "-", "-", "-", "−2.…
+## $ x10_year_annualized_return              &lt;chr&gt; "-", "-", "-", "-", "-",…
+## $ x15_year_annualized_return              &lt;chr&gt; "-", "-", "-", "-", "-",…
+## $ x20_year_annualized_return              &lt;chr&gt; "-", "-", "-", "-", "-",…
+## $ x25_year_annualized_return              &lt;chr&gt; "-", "-", "-", "-", "-",…
+```
+
+---
+
+# Unwanted rows and fixing formatting
+
+We've also got stuff that shouldn't be in our table. Let's make use of three different `dplyr::mutate` variations. These are a powerful alternative to complex loops.
+
+```r
+tail(sp500)
+```
+
+```
+## # A tibble: 6 x 9
+##   year  change_in_index total_annual_re… value_of_1_00_i… x5_year_annuali…
+##   &lt;chr&gt; &lt;chr&gt;           &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
+## 1 2017  19.42%          21.83%           $122.30          15.79%          
+## 2 2018  -6.23%          -4.43%           $116.88          8.48%           
+## 3 High  34.11%          37.58%           $122.30          28.56%          
+## 4 Low   −38.49%         −37.00%          $0.89            −2.35%          
+## 5 CAGR  8.64%           10.53%           N/A              10.52%          
+## 6 Year  Change in Index Total Annual Re… Value of $1.00 … 5 Year Annualiz…
+## # … with 4 more variables: x10_year_annualized_return &lt;chr&gt;,
+## #   x15_year_annualized_return &lt;chr&gt;, x20_year_annualized_return &lt;chr&gt;,
+## #   x25_year_annualized_return &lt;chr&gt;
+```
+---
+
+# Unwanted rows and fixing formatting
+
+Let's make use of three different `dplyr::mutate` variations. These are a powerful alternative to complex loops.
+
+```r
+sp500 &lt;- sp500 %&gt;%
+  slice(1:(nrow(sp500)-4)) %&gt;%
+  mutate_all(~(str_replace_all(.,"[$%]",""))) %&gt;%
+  mutate_all(~(str_replace_all(.,"−","-"))) %&gt;%
+  mutate_if(is.character,as.numeric) %&gt;%
+  mutate_at(vars(-year, -value_of_1_00_invested_on_1970_01_01), ~./100)
+```
+
+`mutuate_all` does the function to all columns. Remember, you need the `~`, which tells R that the thing that follows is the function to be applied. `mutuate_if` checks the first condition and, if true, does the second thing to that column. `mutate_at` does the function to the specified columns. In this case, everything *but* year and the dollar value.
+
+
+---
+# Let's look again
+
+
+```r
+glimpse(sp500)
+```
+
+```
+## Observations: 49
+## Variables: 9
+## $ year                                    &lt;dbl&gt; 1970, 1971, 1972, 1973, …
+## $ change_in_index                         &lt;dbl&gt; 0.0010, 0.1079, 0.1562, …
+## $ total_annual_return_including_dividends &lt;dbl&gt; 0.0401, 0.1431, 0.1898, …
+## $ value_of_1_00_invested_on_1970_01_01    &lt;dbl&gt; 1.04, 1.19, 1.41, 1.21, …
+## $ x5_year_annualized_return               &lt;dbl&gt; NA, NA, NA, NA, -0.0235,…
+## $ x10_year_annualized_return              &lt;dbl&gt; NA, NA, NA, NA, NA, NA, …
+## $ x15_year_annualized_return              &lt;dbl&gt; NA, NA, NA, NA, NA, NA, …
+## $ x20_year_annualized_return              &lt;dbl&gt; NA, NA, NA, NA, NA, NA, …
+## $ x25_year_annualized_return              &lt;dbl&gt; NA, NA, NA, NA, NA, NA, …
+```
+
+---
+# Using janitor to explore our data
+
+Let's see if we have any duplicate observations. `janitor` has several useful functions to help you quickly get a handle on the data you are dealing with.
+
+
+```r
+sp500 %&gt;%
+  janitor::get_dupes(year)
+```
+
+```
+## No duplicate combinations found of: year
+```
+
+```
+## # A tibble: 0 x 10
+## # … with 10 variables: year &lt;dbl&gt;, dupe_count &lt;int&gt;,
+## #   change_in_index &lt;dbl&gt;, total_annual_return_including_dividends &lt;dbl&gt;,
+## #   value_of_1_00_invested_on_1970_01_01 &lt;dbl&gt;,
+## #   x5_year_annualized_return &lt;dbl&gt;, x10_year_annualized_return &lt;dbl&gt;,
+## #   x15_year_annualized_return &lt;dbl&gt;, x20_year_annualized_return &lt;dbl&gt;,
+## #   x25_year_annualized_return &lt;dbl&gt;
+```
+
+---
+# Using janitor to explore our data
+
+We can also make a quick table of counts. This one isn't very interesting. I let it run off the slide, just so you can see what it is doing. You can also get counts (called **crosstabs**) across multiple variables.
+
+
+```r
+sp500 %&gt;%
+  tabyl(year)
+```
+
+```
+##  year n    percent
+##  1970 1 0.02040816
+##  1971 1 0.02040816
+##  1972 1 0.02040816
+##  1973 1 0.02040816
+##  1974 1 0.02040816
+##  1975 1 0.02040816
+##  1976 1 0.02040816
+##  1977 1 0.02040816
+##  1978 1 0.02040816
+##  1979 1 0.02040816
+##  1980 1 0.02040816
+##  1981 1 0.02040816
+##  1982 1 0.02040816
+##  1983 1 0.02040816
+##  1984 1 0.02040816
+##  1985 1 0.02040816
+##  1986 1 0.02040816
+##  1987 1 0.02040816
+##  1988 1 0.02040816
+##  1989 1 0.02040816
+##  1990 1 0.02040816
+##  1991 1 0.02040816
+##  1992 1 0.02040816
+##  1993 1 0.02040816
+##  1994 1 0.02040816
+##  1995 1 0.02040816
+##  1996 1 0.02040816
+##  1997 1 0.02040816
+##  1998 1 0.02040816
+##  1999 1 0.02040816
+##  2000 1 0.02040816
+##  2001 1 0.02040816
+##  2002 1 0.02040816
+##  2003 1 0.02040816
+##  2004 1 0.02040816
+##  2005 1 0.02040816
+##  2006 1 0.02040816
+##  2007 1 0.02040816
+##  2008 1 0.02040816
+##  2009 1 0.02040816
+##  2010 1 0.02040816
+##  2011 1 0.02040816
+##  2012 1 0.02040816
+##  2013 1 0.02040816
+##  2014 1 0.02040816
+##  2015 1 0.02040816
+##  2016 1 0.02040816
+##  2017 1 0.02040816
+##  2018 1 0.02040816
+```
+
+---
+# Export to a CSV File
+
+Now that we have some cleaned up data, maybe we want to use it in Excel. Easy - let's just write a CSV file. My code will below will save it in the same folder as the .Rmd file that makes these slides. You can, of course, change the path to save it wherever you like.
+
+
+```r
+write_csv(sp500, path = "sp500.csv")
+```
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

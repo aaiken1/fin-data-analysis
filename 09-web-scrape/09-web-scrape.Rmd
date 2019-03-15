@@ -1,0 +1,166 @@
+---
+title: "Lecture 9: A Little Web Scraping"
+subtitle: "<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: Adam Aiken | Elon University
+date: FIN 469 #"`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts] 
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, center, middle
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(knitr)
+opts_chunk$set(
+  fig.align="center",  
+  fig.height=4, #fig.width=6,
+  # out.width="748px", #out.length="520.75px",
+  dpi=300, #fig.path='Figs/',
+  cache=T#, echo=F, warning=F, message=F
+  )
+
+library(tidyverse)
+library(rvest)
+library(janitor)
+library(magick)
+library(usethis)
+use_git_config(user.name = "Adam Aiken", user.email = "adam.aiken@gmail.com")
+```
+
+```{css, echo=F}
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+```
+# Scraping the Web
+(Using Wikipedia as an example.)
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec09.r`. No data for this lecture - we will create our own where needed.
+
+```{r, eval=TRUE , message=FALSE}
+library(tidyverse)
+library(rvest)
+library(janitor)
+```
+
+`rvest` is for web scraping, while `janitor` will help us clean up our data. Here's another example that inspired today's lecture: http://cmcr-class.rbind.io/blog/2019/03/14/scraping-data/. I do want to stress, though - every web scrape is different. You need to spend time looking at the HTML to figure out what is going on. There's also often a lot of string manipulation, which can be very frustrating.
+---
+
+# Getting our data
+
+
+```{r}
+webpage <- read_html("https://en.wikipedia.org/wiki/S%26P_500_Index")
+
+all_tables <- webpage %>% 
+    html_table(fill=TRUE) 
+
+sp500 <- as_tibble(all_tables[[4]]) 
+
+```
+
+This code reads in the *entire* HTML file and saves it to *webpage*. Then, we pull out all of the tables. HTML tables are a standard thing and are labeled as such in the code. From inspecting the resulting list, we can see that the fourth item in the list is the table that we want. We then covert this table into a `tibble`.
+
+**Lists** in R are just collections of objects. They are very general, so they can hold very complex things, like multiples pieces of HTML code.
+
+---
+# Looking at what we scraped
+
+```{r}
+glimpse(sp500)
+```
+
+**Yikes.** There's a lot that we will want to fix here. The single quotes indicate that we have variable names with spaces. Bad! Everything is a character. We have dollar signs and percent signs. That "minus" is actually a dash, not -. 
+
+---
+# A useful package: janitor
+`janitor` was built with beginning-to-intermediate R users in mind and is optimized for user-friendliness. Advanced users can already do everything covered here, but they can do it faster with janitor and save their thinking for more fun tasks.
+
+You can read more at: https://github.com/sfirke/janitor
+
+```{r}
+names(sp500)
+sp500 <- sp500 %>% janitor::clean_names()
+```
+---
+# What did clean_names() do?
+
+```{r}
+glimpse(sp500)
+```
+
+---
+
+# Unwanted rows and fixing formatting
+
+We've also got stuff that shouldn't be in our table. Let's make use of three different `dplyr::mutate` variations. These are a powerful alternative to complex loops.
+```{r}
+tail(sp500)
+
+```
+---
+
+# Unwanted rows and fixing formatting
+
+Let's make use of three different `dplyr::mutate` variations. These are a powerful alternative to complex loops.
+```{r, message=FALSE, warning=FALSE}
+sp500 <- sp500 %>%
+  slice(1:(nrow(sp500)-4)) %>%
+  mutate_all(~(str_replace_all(.,"[$%]",""))) %>%
+  mutate_all(~(str_replace_all(.,"−","-"))) %>%
+  mutate_if(is.character,as.numeric) %>%
+  mutate_at(vars(-year, -value_of_1_00_invested_on_1970_01_01), ~./100)
+
+```
+
+`mutuate_all` does the function to all columns. Remember, you need the `~`, which tells R that the thing that follows is the function to be applied. `mutuate_if` checks the first condition and, if true, does the second thing to that column. `mutate_at` does the function to the specified columns. In this case, everything *but* year and the dollar value.
+
+
+---
+# Let's look again
+
+```{r}
+glimpse(sp500)
+```
+
+---
+# Using janitor to explore our data
+
+Let's see if we have any duplicate observations. `janitor` has several useful functions to help you quickly get a handle on the data you are dealing with.
+
+```{r}
+sp500 %>%
+  janitor::get_dupes(year)
+```
+
+---
+# Using janitor to explore our data
+
+We can also make a quick table of counts. This one isn't very interesting. I let it run off the slide, just so you can see what it is doing. You can also get counts (called **crosstabs**) across multiple variables.
+
+```{r}
+sp500 %>%
+  tabyl(year)
+  
+```
+
+---
+# Export to a CSV File
+
+Now that we have some cleaned up data, maybe we want to use it in Excel. Easy - let's just write a CSV file. My code will below will save it in the same folder as the .Rmd file that makes these slides. You can, of course, change the path to save it wherever you like.
+
+```{r}
+write_csv(sp500, path = "sp500.csv")
+```
+

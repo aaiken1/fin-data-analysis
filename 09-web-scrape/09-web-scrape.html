@@ -171,17 +171,49 @@ tail(sp500)
 # Unwanted rows and fixing formatting
 
 Let's make use of three different `dplyr::mutate` variations. These are a powerful alternative to complex loops.
+.code-small[
 
 ```r
-sp500 &lt;- sp500 %&gt;%
+sp500_clean &lt;- sp500 %&gt;%
   slice(1:(nrow(sp500)-4)) %&gt;%
   mutate_all(~(str_replace_all(.,"[$%]",""))) %&gt;%
   mutate_all(~(str_replace_all(.,"−","-"))) %&gt;%
+  mutate_all(~ if_else(. == "-","",.)) %&gt;%
   mutate_if(is.character,as.numeric) %&gt;%
   mutate_at(vars(-year, -value_of_1_00_invested_on_1970_01_01), ~./100)
 ```
+]
+`mutuate_all` does the function to all columns. Remember, you need the `~` to tell R that the thing that follows is the function to be applied. When you see `.`, think "a column" or "a variable". These `mutate` functions are "looping" around your variables and doing things to all of the observations (rows) in each column.`mutuate_if` checks the first condition and, if true, does the second thing to that column. `mutate_at` does the function to the specified columns. In this case, everything *but* year and the dollar value.
 
-`mutuate_all` does the function to all columns. Remember, you need the `~`, which tells R that the thing that follows is the function to be applied. `mutuate_if` checks the first condition and, if true, does the second thing to that column. `mutate_at` does the function to the specified columns. In this case, everything *but* year and the dollar value.
+The `mutate_all` with the `if_else` is checking to see if an observation is equal to a "-" and setting it to "" (nothing) if it is. The "else" is after the second comma and keeps things the same (that's the `.` part). This explicitly sets us up to have blank observations set to NA automatically when we go from character to numeric in the next line.
+---
+# More notes on syntax
+
+
+```r
+sp500_clean &lt;- sp500 %&gt;%
+  slice(1:(nrow(sp500)-4)) %&gt;%
+  mutate_all(~(str_replace_all(.x,"[$%]",""))) %&gt;%
+  mutate_all(~(str_replace_all(.x,"−","-"))) %&gt;%
+  mutate_all(~ if_else(.x == "-","",.x)) %&gt;%
+  mutate_if(is.character,as.numeric) %&gt;%
+  mutate_at(vars(-year, -value_of_1_00_invested_on_1970_01_01), ~.x/100)
+```
+See a difference? Instead of `.`, I put `.x`. This does the exact same thing, though you have to use "x". I think that this actually makes the code more readable. Now, when you see `.x`, just think "one of my columns in the tibble coming through the pipe". 
+
+`str_replace_all` is part of the `stringr` package. The "all" part is like with `mutate` - it will "loop" through all of our variables. What's with the [ and ]? They mean "any characters in the brackets, replace with the thing after the comma". In this case, the expression after the comma is "", or nothing. This is standard *regex* notation, which is a way to deal with text in many programming languages.
+
+See https://www.rdocumentation.org/packages/stringr/versions/1.4.0/topics/str_replace
+
+---
+# Helpful Links
+
+Here are some helpful links for dealing working with these `mutate` variants. These are powerful tools. And, the nice thing about R is that that many people have written helpful guides for us.
+
+- Nice examples on dealing with missing values: https://cran.r-project.org/web/packages/naniar/vignettes/replace-with-na.html
+- Good `mutuate` examples with some work with strings/text: https://suzan.rbind.io/2018/02/dplyr-tutorial-2/
+- Don't forget the `tidyverse` help guides. Here's for an similar set of `summarise` functions: https://dplyr.tidyverse.org/reference/summarise_all.html
+- Want to learn more about `stringr` and dealing with text? https://www.rdocumentation.org/packages/stringr/versions/1.4.0
 
 
 ---
@@ -189,7 +221,7 @@ sp500 &lt;- sp500 %&gt;%
 
 
 ```r
-glimpse(sp500)
+glimpse(sp500_clean)
 ```
 
 ```
@@ -213,7 +245,7 @@ Let's see if we have any duplicate observations. `janitor` has several useful fu
 
 
 ```r
-sp500 %&gt;%
+sp500_clean %&gt;%
   janitor::get_dupes(year)
 ```
 
@@ -238,7 +270,7 @@ We can also make a quick table of counts. This one isn't very interesting. I let
 
 
 ```r
-sp500 %&gt;%
+sp500_clean %&gt;%
   tabyl(year)
 ```
 
@@ -302,7 +334,7 @@ Now that we have some cleaned up data, maybe we want to use it in Excel. Easy - 
 
 
 ```r
-write_csv(sp500, path = "sp500.csv")
+write_csv(sp500_clean, path = "sp500_clean.csv")
 ```
     </textarea>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

@@ -1,0 +1,225 @@
+---
+title: "Lecture 10: xts and time series"
+subtitle: "<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: Adam Aiken | Elon University
+date: FIN 469 #"`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts] 
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, center, middle
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(knitr)
+opts_chunk$set(
+  fig.align="center",  
+  fig.height=4, #fig.width=6,
+  # out.width="748px", #out.length="520.75px",
+  dpi=300, #fig.path='Figs/',
+  cache=T#, echo=F, warning=F, message=F
+  )
+```
+
+```{css, echo=F}
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+```
+# The xts package
+(xts, zoo, time series and tidyquant!)
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec10.r`.
+
+```{r, eval=TRUE , message=FALSE}
+library(tidyverse)
+library(xts)
+library(tidyquant)
+library(PerformanceAnalytics)
+```
+
+- We are going to talk about the `xts` package today. This is a very popular "old school" R package for handling time series data (e.g. stock prices and returns). It is also the subject of your **next DataCamp module, due April 8th**. 
+
+- `xts` is also part of the `tidyquant` package. This means that we can use the `xts` functions, but as part of a `tidyquant` function. This let's us do old school R finance stuff, but with a `tidy` flavor. So why learn the traditional way? `tidyquant` is very new and most of finance R still uses traditional `xts`.
+
+---
+# Getting our data
+
+
+```{r}
+etf <- read_csv("data/etf-reproducible-finance.csv")
+```
+
+- Let's read in our ETF data that we looked at a while back. This data is in a traditional **time series** format, with each column representing a security. This is **not** an `xts` object yet, though.
+
+- By telling R that data is an `xts` object, we are telling R that we can do some special functions that are part of the `xts` package. These functions are common things that you would want to do to time series data, like go from daily to monthly, pull certain periods, or create *rolling* calculations.
+
+---
+# Getting our data (cont.)
+
+```{r}
+ff <- read_csv("data/ff_daily.csv")
+ff <- ff %>% mutate(date = ymd(parse_date_time(date, "%Y%m%d")))
+```
+
+-Let's also bring in some daily FF factor returns that I've already cleaned up for you. The `mutate` is to fix the date.
+
+- Helpful link: https://www.datacamp.com/community/blog/r-xts-cheat-sheet
+
+
+---
+# Creating an xts object
+
+We have some times series data in R now. Let's tell R that we want it to treat this as an `xts` object. Easy - just use type coercion! There is also an `xts::xts` function that creates an `xts` object from scratch. You'll see this in the DataCamp module.
+
+```{r}
+etf <- as.xts(etf[,-1], order.by = etf$date)
+class(etf)
+ff <- as.xts(ff[,-1], order.by = ff$date)
+```
+
+This code is saying take all columns but the first one and make these our time series. Then, take the **date** column and make that our **index**. Open up the `xts` object and you'll see that **date** is there, but it doesn't have a column name. It isn't a regular variable anymore!
+
+---
+# Subsetting xts data
+
+```{r}
+first(etf[index(etf) > "2017-01-01"], "5 days")
+```
+
+Note the square brackets. This is because we are pulling data from the object *etf*. Parentheses are for functions. R is checking if our condition is true and giving us those observations. `xts` also has the `xts::first` and `xts::last` functions. They are like `head` and `tail`, but they understand time intervals.
+
+---
+# Subsetting xts data (cont.)
+
+Use `/` for a range of dates.
+
+```{r}
+first(etf["2013-01-01/2013-01-31"], "5 days")
+```
+
+---
+# Subsetting xts data (cont.)
+
+You can even **nest** `first` and `last`. The `last` goes first, so you pull out the last two months. Then, you get the `first` five days of that period.
+
+```{r}
+first(last(etf, "2 months"), "5 days")
+```
+
+---
+# Merging with xts
+
+Just like our other joins/mergers. Note the differences between *outer*, *inner*, *left*, and *right*. Look at the file size differences!
+
+```{r warning=FALSE}
+outer_data <- merge.xts(etf, ff, fill = "NA", join ="outer")
+inner_data <- merge.xts(etf, ff, fill = "NA", join ="inner")
+left_data <- merge.xts(etf, ff, fill = "NA", join ="left")
+right_data <- merge.xts(etf, ff, fill = "NA", join ="right")
+```
+- left merge: only observations in the left data set
+- right merge: only observations in the right data set
+- outer merge: all observations 
+- inner merger: only observations in both sets
+
+DataCamp uses `merge`, but you want to use`merge.xts`. See DataCamp module for additional ways to handle **missing values**.
+
+---
+# Lags and Differences
+
+Two of the most common things you might want to do with time series data is create **lagged** values or to take **differences**. We've seen this with `dplyr` already. These are standard **time series operators**
+
+```{r}
+etf_lag1 <- lag.xts(etf, k = 1, na.pad = TRUE)
+etf_diff <- diff.xts(etf, lag = 1, differences = 1, arithmetic = TRUE, na.pad = TRUE)
+```
+
+Compare *etf*, *etf_lag1*, and *etf_diff* to see what happened.
+
+---
+# Applying functions by time
+
+This is where `xts` really starts to be useful. The idea of a date is at the core of the package, so there are many different built-in functions. You can apply functions (e.g. mean) over certain periods of time (e.g. monthly).
+
+**INDEX** is a vector of end dates. We can use the `endpoints` function to pull out the end-of-year (or month, or week, etc.) dates from our data.
+
+```{r eval = FALSE}
+period.apply(x, INDEX, FUN, ...)
+endpoints(x, on = "years")
+```
+
+```{r}
+end_of_week_points <- endpoints(etf, on = "weeks")
+last(period.apply(etf, INDEX = end_of_week_points, FUN = median), "3 weeks")
+```
+
+Note that function can be *any* R function (including one your write) that makes sense in context.
+
+---
+# Applying functions by time (cont.)
+
+There is also a useful `split.xts` function. It creates a **list** for each date group. This is why you are seeing double brackets. Here I am pulling the first 10 days of the 17 month in the data.
+
+```{r}
+etf_by_month <- split.xts(etf, f = "months")
+first(etf_by_month[[17]], "10 days")
+```
+
+---
+# Converting periods
+
+Let's say you wanted to pull month end data for the 4th column of the ETF data (the AGG ETF). The `to.period` function looks within each period and gets you the opening value, the high, the low, and the closing value. The **name** argument tells the function what to put before .open, .high, etc.
+
+```{r}
+first(to.period(etf["2013/2014", 4], "months", name = "AGG"), "5 months")
+```
+
+---
+# Rolling functions
+
+First, let's convert our prices into daily log returns. I'm going to "cheat" and use a function from the `PerformanceAnalytics` package.
+
+```{r}
+etf_daily_rets <- Return.calculate(etf, method = "log") %>% na.omit()
+```
+
+*etf_daily_rets* is still an `xts` object. Now, let's use the split/apply/bind methodology. The `tidy` way has meant that we've avoided this, but it is useful to see.
+
+```{r}
+etf_monthly_rets <- split(etf_daily_rets[, 4], f = "months")
+etf_monthly_rets <- lapply(etf_monthly_rets, cumsum)
+etf_monthly_rets <- do.call(rbind, etf_monthly_rets)
+```
+
+What did we just do? We `splt` the EEM ETF out into a **list**, where each month observations is a separate element of that list. Then, we used `lapply` to do a **cumulative sum** of all returns for each month in the list. This gives us the **total monthly return to that point in time**. Finally, we used `do.call` and `rbind` to combine the elements in our list back together and create an `xts` object once again. `do.call` is a little trick that lets us avoid having to list out each element of the list to `rbind`. It just does them all.
+
+---
+# Rolling functions (cont.)
+The `rollapply` function let's us use rolling windows. Think things like **moving averages**. This example picks out the EEM ETF and calculates 3 day rolling averages of log returns. You can certainly use this method to start to calculate things like 200-day moving averages, but there are actually packages already created for your technical trading needs.
+
+```{r}
+first(rollapply(etf_daily_rets[, 4], 3, mean), "10 days")
+```
+
+
+---
+# Next Up...
+
+- We'll have a relatively short lab this week. You can work on it in class on Thursday, as usual.
+
+- Don't forget the **DataCamp module due April 8th**. We have basically covered the content.
+
+- We'll go back to `tidyquant` next. I also want to introduce you to more of the `PerformanceAnalytics` package. It is time to get into some "real" finance. 
+
+- **What topics would you like to see?** I'm thinking portfolio optimization and performance analysis. Maybe some fixed income and derivatives. Anything that seemed hard in Excel when you did it for an internship? Fancy finance stuff?

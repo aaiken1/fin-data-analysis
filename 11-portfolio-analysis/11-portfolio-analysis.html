@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 11: Intro to Portfolio Analysis</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 11: Intro to Portfolio Analysis
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+# Portfolio Analysis in R
+(Finally, some real finance!)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec10.r`.
+
+
+```r
+library(tidyverse)
+library(xts)
+library(MASS)
+library(tidyquant)
+library(PerformanceAnalytics)
+library(PortfolioAnalytics)
+library(ROI)
+library(ROI.plugin.quadprog)
+library(ROI.plugin.glpk)
+library(DEoptim)
+```
+
+- Let's load in our general set of R packages. The last three are specifically for dealing with financial data and come with many different built-in tools. If one doesn't load, then that just means that you need to install it.
+
+- **Project Idea**: Explore different risk measures and portfolio optmization techniques. Use package features that we don't get to in class.
+
+---
+# Getting our data
+
+
+```r
+etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+```
+
+```
+## Parsed with column specification:
+## cols(
+##   date = col_date(format = ""),
+##   SPY = col_double(),
+##   EFA = col_double(),
+##   IJS = col_double(),
+##   EEM = col_double(),
+##   AGG = col_double()
+## )
+```
+
+- Let's read in our ETF data that we looked at a while back. This data is in a traditional **time series** format, with each column representing a security. 
+
+- Your last DataCamp (due May 6th) discusses a variety of portfolio analysis tools.
+
+
+---
+
+class: inverse, center, middle
+
+# Return Distributions
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Portfolio Construction
+
+What is **portfolio construction**? Choosing and sizing the various trades to achieve a good trade-off between risk and expected return.
+
+1. Diversification
+2. Position limits and risk limits: 
+  - At the level of securities, asset classes, and overall portfolio. Jim Chanos makes sure that all his positions are less than 5% of his net asset value (NAV).
+3. Larger bets on higher conviction trade.
+4. Size bets in terms of risk
+5. Correlations matter
+  - For a long position, correlation with other longs is bad, corr. with shorts is good
+  - Powerful to go long/short within each industry, diversify across industries
+  - Can use ETFs and futures to “hedge” out sector and market exposure
+6. Resize positions according to forward-looking risk and conviction
+
+&gt; “Hold” is not an option – Lee Ainslie
+
+---
+# Prices to returns
+
+Let's get this data frame of prices into an `xts` object of returns.
+
+```r
+etf &lt;- as.xts(etf[,-1], order.by = etf$date)
+etf &lt;- Return.calculate(etf, method = "discrete") %&gt;% na.omit()
+```
+
+The `PortfolioAnalytics` package is going to want our returns in a `xts` object. Also note that we use **discrete** returns for portfolio optimization.
+
+---
+# What do stock returns look like?
+
+- We need concepts beyond just mean and standard deviation. Risk takes many forms, such as *skewness* and *kurtosis*.
+- Daily stock returns do not follow a normal distribution. There are market crashes!
+
+[QQ plots](https://ggplot2.tidyverse.org/reference/geom_qq.html) are an interesting way to visualize distributions.
+
+
+```r
+  ggplot(etf, aes(sample = SPY)) +
+  stat_qq() + 
+  stat_qq_line()
+```
+
+A QQ plot compares a sample to a theoretical distribution. In this example, if stock returns are normally distributied (i.e. exhibit no skewness or excess kurtosis), then returns should line up on the QQ line.
+
+
+```r
+quantile(etf$SPY,probs=c(0.001, 0.01, 0.25, 0.50, 0.75, 0.99, 0.999))
+```
+
+```
+##          0.1%            1%           25%           50%           75% 
+## -0.0353366498 -0.0214325257 -0.0027821939  0.0006314354  0.0046407744 
+##           99%         99.9% 
+##  0.0193581287  0.0252210031
+```
+
+
+
+---
+# QQ plot
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+
+
+
+---
+# QQ plot for daily SPY returns
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Different distributions
+
+- If daily stock returns are not normally distributed, maybe we can do better?
+- Distributions are *hats* that we pick numbers from. There are many different hats out there that might fit our stock return data better. Let's focus on one, the [student-t distribution](http://astrostatistics.psu.edu/su07/R/html/stats/html/TDist.html).
+- The density curve looks like a standard normal curve, but the tails of the t-distribution are "heavier" than the tails of the normal distribution. 
+
+
+
+```r
+ggplot() + 
+  geom_density(aes(x = rt(1000, 2, 0))) + 
+  geom_density(aes(x = rnorm(1000, 0, 1)), color="blue", linetype="dashed") +
+  labs(x = "Values from t and normal distributions", 
+       subtitle = "t distribution has lower peak around mean and heavier tails")
+```
+
+---
+# Comparing two distributions
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Finding parameters of a distribution
+
+Using [`MASS::fitdistr`](https://www.rdocumentation.org/packages/MASS/versions/7.3-51.3/topics/fitdistr), we can ask R to pick the paramters from our data that are used to describe the distribution. For example, let's see what parameters describe SPY if we assume a normal distribution or a t distribution.
+
+
+```r
+params_normal &lt;- as.list(MASS::fitdistr(etf$SPY, "normal")$estimate)
+params_t &lt;- as.list(MASS::fitdistr(etf$SPY, "t")$estimate)
+```
+
+---
+# Finding parameters of a distribution (cont.)
+
+
+```r
+params_normal
+```
+
+```
+## $mean
+## [1] 0.0005819253
+## 
+## $sd
+## [1] 0.007480572
+```
+
+```r
+params_t
+```
+
+```
+## $m
+## [1] 0.0008187496
+## 
+## $s
+## [1] 0.005277866
+## 
+## $df
+## [1] 3.515251
+```
+---
+
+# A better QQ plot
+
+
+```r
+ggplot(etf, aes(sample = SPY)) +
+  stat_qq(distribution = qt, dparams = params_t["df"]) +
+  stat_qq_line(distribution = qt, dparams = params_t["df"]) + 
+  labs(subtitle = "QQ plot where we assume that the SPY returns follow
+       a t distribution using the actual parameters from the data")
+```
+
+---
+
+# A better QQ plot (cont.)
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+class: inverse, center, middle
+
+# Portfolio Notation
+(Some familiar math.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Mean and variance from historical data
+Our standard calculations and assumptions.
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/formula1.png" alt="Source: DataCamp" width="75%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Calculating covariance
+
+Covariance measures how two variables move together.
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/cov.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Two-asset portfolio math
+
+These formulas are **must knows** for finance folks! For example, you need these on CFA Level 1.
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/two_assets.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+When we just have two assets, things are easy.
+
+---
+# Lots of assets
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/n_assets.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+
+---
+# Variance-Covariance Matrix
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/covar.png" alt="Source: DataCamp" width="75%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+The **variance-covariance matrix**, denoted `\(\Sigma\)`, contains the variances and **covariances** for all of the assets that we are considering.
+
+---
+# Matrix notation
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/matrices1.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Matrix notation (cont)
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/matrices2.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+---
+
+# Finding the variance-covariance matrix
+
+
+```r
+cov(etf)
+```
+
+```
+##               SPY           EFA           IJS          EEM           AGG
+## SPY  5.600348e-05  5.663246e-05  5.937921e-05 6.455518e-05 -2.572877e-06
+## EFA  5.663246e-05  8.141569e-05  6.055921e-05 8.430319e-05 -1.787818e-06
+## IJS  5.937921e-05  6.055921e-05  9.025904e-05 7.015678e-05 -3.714983e-06
+## EEM  6.455518e-05  8.430319e-05  7.015678e-05 1.340944e-04  3.274944e-07
+## AGG -2.572877e-06 -1.787818e-06 -3.714983e-06 3.274944e-07  4.135723e-06
+```
+
+```r
+cov_etf &lt;- cov(etf)
+class(cov_etf)
+```
+
+```
+## [1] "matrix"
+```
+
+```r
+cov_etf[1,1]
+```
+
+```
+## [1] 5.600348e-05
+```
+
+The variance-covariance matrix is a crucial input into the portfolio optimization process. Make sure that you can interpret the numbers.
+
+
+---
+# Correlations are easier to interpret
+
+```r
+cor(etf)
+```
+
+```
+##            SPY         EFA        IJS        EEM         AGG
+## SPY  1.0000000  0.83869468  0.8351828 0.74493468 -0.16905801
+## EFA  0.8386947  1.00000000  0.7064489 0.80683473 -0.09743018
+## IJS  0.8351828  0.70644895  1.0000000 0.63770365 -0.19228069
+## EEM  0.7449347  0.80683473  0.6377037 1.00000000  0.01390666
+## AGG -0.1690580 -0.09743018 -0.1922807 0.01390666  1.00000000
+```
+
+```r
+cor_etf &lt;- cor(etf)
+class(cor_etf)
+```
+
+```
+## [1] "matrix"
+```
+
+```r
+cor_etf[3,2] #3rd row, 2nd column
+```
+
+```
+## [1] 0.7064489
+```
+
+---
+class: inverse, center, middle
+
+# Modern Portfolio Theory
+(Thinking about optimal portfolios.)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# A simple idea
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/target_ret.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+
+---
+# A simple idea (cont.)
+
+- Modern Portfolio Theory (MPT) was introduced by Harry
+Markowitz in 1952.
+
+- MPT states that an investor's objective is to maximize
+portfolio expected return for a given amount of risk.
+
+- Common **objectives**:
+  - Maximize a measure of gain per unit measure of risk
+  - Minimize a measure of risk
+  
+- Subject to different types of **constraints**, such as return targets, no shorting, and full investment.
+  
+- You've seen this in Investments. You've maybe seen this in Excel using SOLVER. Let's use `PortfolioAnalytics` and have some fun.
+
+---
+# PortfolioAnalytics
+Let's try a `PortfolioAnalytics` example. You set up your portfolio object and then add objectives and constraints to it. You can get fancy here.
+
+```r
+port_spec_ret &lt;- portfolio.spec(colnames(etf)) #Declares a portfolio objective
+class(port_spec_ret)
+```
+
+```
+## [1] "portfolio.spec" "portfolio"
+```
+
+```r
+#Min risk, as defined by StdDev
+port_spec_ret &lt;- add.objective(portfolio = port_spec_ret, type = "risk", name = "StdDev")
+# Max return given constraint below
+port_spec_ret &lt;- add.objective(portfolio=port_spec_ret, type="return", name="mean")
+
+#Weights sum to 1
+port_spec_ret &lt;- add.constraint(portfolio = port_spec_ret, type = "full_investment")
+#No shorting
+port_spec_ret &lt;- add.constraint(portfolio = port_spec_ret, type = "long_only")
+#Return constraint - daily return target
+port_spec_ret &lt;- add.constraint(portfolio = port_spec_ret,
+type = "return", return_target = 0.0005)
+```
+
+---
+# Our portfolio objective
+
+.code-small[
+
+```r
+print(port_spec_ret)
+```
+
+```
+## **************************************************
+## PortfolioAnalytics Portfolio Specification 
+## **************************************************
+## 
+## Call:
+## portfolio.spec(assets = colnames(etf))
+## 
+## Number of assets: 5 
+## Asset Names
+## [1] "SPY" "EFA" "IJS" "EEM" "AGG"
+## 
+## Constraints
+## Enabled constraint types
+## 		- full_investment 
+## 		- long_only 
+## 		- return 
+## 
+## Objectives:
+## Enabled objective names
+## 		- StdDev 
+## 		- mean
+```
+]
+
+---
+# Optimization process
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/opt_flow.png" alt="Source: DataCamp" width="100%" /&gt;
+&lt;p class="caption"&gt;Source: DataCamp&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Optimization with quad prog
+
+
+```r
+optimize.portfolio(R = etf, portfolio = port_spec_ret, 
+                               optimize_method = "ROI", trace = FALSE)
+```
+
+```
+## ***********************************
+## PortfolioAnalytics Optimization
+## ***********************************
+## 
+## Call:
+## optimize.portfolio(R = etf, portfolio = port_spec_ret, optimize_method = "ROI", 
+##     trace = FALSE)
+## 
+## Optimal Weights:
+##    SPY    EFA    IJS    EEM    AGG 
+## 0.8382 0.0000 0.0000 0.0000 0.1618 
+## 
+## Objective Measure:
+##  mean 
+## 5e-04 
+## 
+## 
+##   StdDev 
+## 0.006226
+```
+
+---
+# Optimization random portfolios
+
+Let's choose random portfolios and plot the resulting risk and return trade-offs. First, we set up the portfolio specifications.
+
+
+```r
+port_spec_random &lt;- portfolio.spec(colnames(etf)) #Declares a portfolio objective
+
+#Min risk, as defined by StdDev
+port_spec_random &lt;- add.objective(portfolio = port_spec_random, type = "risk",
+                                  name = "StdDev")
+# Max return
+port_spec_random &lt;- add.objective(portfolio = port_spec_random, type="return", 
+                                  name="mean")
+
+#Weights sum to 1, but with a little room for error given our method
+port_spec_random &lt;- add.constraint(portfolio = port_spec_random, type="weight_sum", 
+                                   min_sum = 0.99, max_sum = 1.01)
+#No shorting
+port_spec_random &lt;- add.constraint(portfolio = port_spec_random, type = "long_only")
+```
+
+---
+# Optimization random portfolios
+
+Now, we create 2000 portfolios. We'll plot them on the next slide. The labeled optimal portfolio will be the minimum variance portfolio, since we don't have a return target.
+
+
+```r
+opt_random &lt;- optimize.portfolio(etf, portfolio = port_spec_random,
+optimize_method = "random", trace = TRUE, search_size = 2000)
+```
+
+---
+# Optimization random portfolios
+
+```r
+chart.RiskReward(opt_random, risk.col = "StdDev", return.col = "mean", 
+                chart.assets = TRUE)
+```
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-31-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+---
+# Generate the efficient frontier
+
+
+```r
+meanvar_ef &lt;- create.EfficientFrontier(R = etf, portfolio = port_spec_random, type="mean-StdDev")
+chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", tangent.line = TRUE, RAR.text = "Sharpe Ratio", pch = 4, n.portfolios = 100, type = "l" )
+```
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Inspecting our object
+
+
+```r
+attributes(meanvar_ef)
+```
+
+```
+## $names
+## [1] "call"      "frontier"  "R"         "portfolio"
+## 
+## $class
+## [1] "efficient.frontier"
+```
+
+```r
+meanvar_ef$frontier[1:5,]
+```
+
+```
+##                  mean      StdDev          out      w.SPY         w.EFA
+## result.1 0.0001303512 0.001832601 3.358425e-06 0.07539585  0.000000e+00
+## result.2 0.0001508805 0.001858655 3.454598e-06 0.11914022 -2.659508e-20
+## result.3 0.0001714098 0.001934714 3.743118e-06 0.16288458  0.000000e+00
+## result.4 0.0001919391 0.002055233 4.223985e-06 0.20662894  0.000000e+00
+## result.5 0.0002124684 0.002212961 4.897198e-06 0.25037331  0.000000e+00
+##                w.IJS         w.EEM     w.AGG
+## result.1 0.024737004  3.043656e-18 0.8898671
+## result.2 0.019617649 -3.742429e-18 0.8512421
+## result.3 0.014498295 -1.052851e-17 0.8126171
+## result.4 0.009378940 -1.731460e-17 0.7739921
+## result.5 0.004259586 -2.410068e-17 0.7353671
+```
+
+---
+# Annualizing our data
+
+
+```r
+meanvar_ef$frontier[,1] &lt;- (1 + meanvar_ef$frontier[,1])^250 - 1
+meanvar_ef$frontier[,2] &lt;- meanvar_ef$frontier[,2] * sqrt(250)
+meanvar_ef$frontier[1:5,]
+```
+
+```
+##                mean     StdDev          out      w.SPY         w.EFA
+## result.1 0.03312241 0.02897596 3.358425e-06 0.07539585  0.000000e+00
+## result.2 0.03843761 0.02938791 3.454598e-06 0.11914022 -2.659508e-20
+## result.3 0.04378004 0.03059051 3.743118e-06 0.16288458  0.000000e+00
+## result.4 0.04914985 0.03249609 4.223985e-06 0.20662894  0.000000e+00
+## result.5 0.05454717 0.03498999 4.897198e-06 0.25037331  0.000000e+00
+##                w.IJS         w.EEM     w.AGG
+## result.1 0.024737004  3.043656e-18 0.8898671
+## result.2 0.019617649 -3.742429e-18 0.8512421
+## result.3 0.014498295 -1.052851e-17 0.8126171
+## result.4 0.009378940 -1.731460e-17 0.7739921
+## result.5 0.004259586 -2.410068e-17 0.7353671
+```
+
+---
+# Plotting things again...
+
+
+```r
+xlim &lt;- range(meanvar_ef$frontier[,2])*c(1, 1.5)
+ylim &lt;- range(meanvar_ef$frontier[,1])*c(.80, 1.05)
+
+chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", chart.assets = FALSE, 
+                          labels.assets = FALSE, xlim = xlim, ylim = ylim, rf = 0.025)
+```
+
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-35-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# Next Up...
+
+- **Think about project topics!** Maybe more advanced portfolio optimization? Something about risk management? Ever heard of shrinkage estimators? Bayesian techniques?
+
+- Don't forget the **DataCamp module due April 22nd and May 6th**. The first is on importing and exporting financial data and will get you your DataCamp badge. The last is on performance analysis and reviews many of the same concepts that we just discussed.
+
+- We will keep going with `tidyquant`, `PerformanceAnalytics`, and `PortfolioAnalytics`. 
+
+- Let's also discuss **risk management** topics, such as value-at-risk and expected shortfall.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

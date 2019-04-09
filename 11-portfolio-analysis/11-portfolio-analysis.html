@@ -440,7 +440,8 @@ class(port_spec_ret)
 
 ```r
 #Min risk, as defined by StdDev
-port_spec_ret &lt;- add.objective(portfolio = port_spec_ret, type = "risk", name = "StdDev")
+port_spec_ret &lt;- add.objective(portfolio = port_spec_ret, type = "risk", 
+                               name = "StdDev")
 # Max return given constraint below
 port_spec_ret &lt;- add.objective(portfolio=port_spec_ret, type="return", name="mean")
 
@@ -650,7 +651,8 @@ xlim &lt;- range(meanvar_ef$frontier[,2])*c(1, 1.5)
 ylim &lt;- range(meanvar_ef$frontier[,1])*c(.80, 1.05)
 
 chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", chart.assets = FALSE, 
-                          labels.assets = FALSE, xlim = xlim, ylim = ylim, rf = 0.025)
+                          labels.assets = FALSE, xlim = xlim, ylim = ylim, 
+                        rf = 0.025)
 ```
 
 &lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-35-1.png" width="80%" style="display: block; margin: auto;" /&gt;

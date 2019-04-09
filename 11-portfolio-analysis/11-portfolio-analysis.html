@@ -576,11 +576,14 @@ chart.RiskReward(opt_random, risk.col = "StdDev", return.col = "mean",
 
 
 ```r
-meanvar_ef &lt;- create.EfficientFrontier(R = etf, portfolio = port_spec_random, type="mean-StdDev")
-chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", tangent.line = TRUE, RAR.text = "Sharpe Ratio", pch = 4, n.portfolios = 100, type = "l" )
+meanvar_ef &lt;- create.EfficientFrontier(R = etf, portfolio = port_spec_random, 
+                                       type="mean-StdDev")
+chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", tangent.line = TRUE, 
+                        RAR.text = "Sharpe Ratio", pch = 4, n.portfolios = 100,
+                        type = "l" )
 ```
 
-&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" /&gt;
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-32-1.png" width="80%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Inspecting our object
@@ -651,7 +654,7 @@ xlim &lt;- range(meanvar_ef$frontier[,2])*c(1, 1.5)
 ylim &lt;- range(meanvar_ef$frontier[,1])*c(.80, 1.05)
 
 chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", chart.assets = FALSE, 
-                          labels.assets = FALSE, xlim = xlim, ylim = ylim, 
+                        labels.assets = FALSE, xlim = xlim, ylim = ylim, 
                         rf = 0.025)
 ```
 

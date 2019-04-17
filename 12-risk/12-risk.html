@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 12: Risk Management</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 12: Risk Management
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+&lt;/style&gt;
+# Risk Management in R
+(Beyond standard deviations and betas)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec12.r`.
+
+
+```r
+library(tidyverse)
+library(xts)
+library(MASS)
+library(tidyquant)
+library(PerformanceAnalytics)
+library(PortfolioAnalytics)
+library(moments)
+```
+
+- Let's load in our general set of R packages. The last three are specifically for dealing with financial data and come with many different built-in tools. If one doesn't load, then that just means that you need to install it.
+
+- See [here](https://rviews.rstudio.com/2017/12/13/introduction-to-skewness/) for examples on skewness and [here](https://rviews.rstudio.com/2018/01/04/introduction-to-kurtosis/) for examples on kurtosis.
+
+- **This stuff appears on the CFA Exam, equations and all!**
+
+---
+# Getting our data
+
+
+```r
+etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+```
+
+```
+## Parsed with column specification:
+## cols(
+##   date = col_date(format = ""),
+##   SPY = col_double(),
+##   EFA = col_double(),
+##   IJS = col_double(),
+##   EEM = col_double(),
+##   AGG = col_double()
+## )
+```
+
+- Let's read in our ETF data that we looked at a while back. This data is in a traditional **time series** format, with each column representing a security. 
+
+- Your last DataCamp (due May 6th) discusses a variety of portfolio analysis tools.
+
+---
+# Prices to returns
+
+Let's get this data frame of prices into an `xts` object of returns. Going to use log returns today.
+
+```r
+etf &lt;- as.xts(etf[,-1], order.by = etf$date)
+etf &lt;- Return.calculate(etf, method = "log") %&gt;% na.omit()
+```
+
+The `PortfolioAnalytics` package is going to want our returns in a `xts` object. Also note that we use **discrete** returns for portfolio optimization.
+
+---
+
+class: inverse, center, middle
+
+# More return distributions
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+
+---
+# Visualizing a non-normal distribution
+A QQ Plot using daily EEM (emerging market ETF) returns.
+
+
+```r
+  ggplot(etf, aes(sample = EEM)) +
+  stat_qq() + 
+  stat_qq_line()
+```
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-5-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Statistical tests for non-normality
+- Skewness (b) is a measure of asymmetry
+- Kurtosis (k) is a measure of heavy-tailedness
+- Skewness and kurtosis of normal are 0 and 3, respectively. The function used below gives **excess kurtosis**.
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/skew_kurt.png" alt="Skewness and kurtosis formulas" width="35%" /&gt;
+&lt;p class="caption"&gt;Skewness and kurtosis formulas&lt;/p&gt;
+&lt;/div&gt;
+
+```r
+PerformanceAnalytics::skewness(etf$EEM) 
+```
+
+```
+## [1] -0.1824716
+```
+
+```r
+PerformanceAnalytics::kurtosis(etf$EEM)
+```
+
+```
+## [1] 1.47973
+```
+
+---
+# The Jarque-Bera test
+
+- Compares skewness and kurtosis of you data with theoretical normal values (0 and 3)
+- This gives us a **formal test**, rather than just a graph, for asymmetrical distributions and/or heavy tails.
+- n = number of obs, b = sample skewness, k = sample kurtosis
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/JB_test.png" alt="Skewness and kurtosis formulas" width="35%" /&gt;
+&lt;p class="caption"&gt;Skewness and kurtosis formulas&lt;/p&gt;
+&lt;/div&gt;
+
+
+```r
+jarque.test(as.numeric(etf$EEM))
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  as.numeric(etf$EEM)
+## JB = 121.75, p-value &lt; 2.2e-16
+## alternative hypothesis: greater
+```
+
+The `as.numeric` is necessary, as the JB function doesn't like `xts` objects.
+
+---
+# Autocorrelation
+
+- Sample autocorrelation function (acf) measures correlation between variables separated by lag (k). So, we are not looking at the correlaction between two different returns. We are looking at if a return is correlated with its own past history.
+- This leads to the idea of **stationarity**. What does this mean?
+  - Expected return constant over time. Doesn't change depending on what happened yesterday.
+  - Variance of return distribution always the same.
+  - Correlation between returns k apart always the same.
+- Notation for sample autocorrelation: `\(\rho(k)\)`
+
+We can use the `acf` function from the built-in `stats` package to quickly visualize if a return at time *t* is correlated with returns at *t-1*, or *t-2*, or *t-3*, etc.
+
+---
+# Autocorrelation (cont.)
+
+
+```r
+acf(etf$EEM)
+```
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-10-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+The dashed blue lines are the 95% confidence intervals, so crossing this threshold indicates statistical significance at the 5% level (p &lt; 0.05). What does this mean? Stock returns look like what we call **white noise**. Returns yesterday don't predict returns today - they are pretty random, at least using these simple tests.
+---
+# Autocorrelation (cont.)
+
+
+```r
+acf(abs(etf$EEM))
+```
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-11-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+One simple change - take the absolute value of the return. What happened? 
+---
+# The Ljung-Box test
+
+This statistic tests for autocorrelation. If stock returns are *independently and identically distributed (iid)*, then we can think of each day's return coming from a "bucket of returns" that has no relationship with yesterday's bucket. This test will let us know if a time series is *iid*.
+
+
+```r
+Box.test(as.numeric(etf$EEM), lag = 10, type = "Ljung")
+```
+
+```
+## 
+## 	Box-Ljung test
+## 
+## data:  as.numeric(etf$EEM)
+## X-squared = 11.219, df = 10, p-value = 0.3407
+```
+That p-value means that we can't reject the null hypothesis that the returns are iid using traditional levels of statistical significance (e.g. p &lt; 0.05). We used 10 days of lags for this test, so our daily emerging market returns don't exhibit autocorrelation when using these lags.
+
+What does this mean to you? Trading based on yesterday's or this week's returns, hoping for a bounce or a continuation of a trend, is hard!
+---
+# The Ljung-Box test (cont.)
+
+Let's try the absolute value of returns again.
+
+
+```r
+Box.test(as.numeric(abs(etf$EEM)), lag = 10, type = "Ljung")
+```
+
+```
+## 
+## 	Box-Ljung test
+## 
+## data:  as.numeric(abs(etf$EEM))
+## X-squared = 192.18, df = 10, p-value &lt; 2.2e-16
+```
+Wow! That's a lot different. Big moves over the past ten days, either up or down, appear to predict big moves today.
+---
+# Volatility clustering
+
+Let's flip the sign on our returns and then only keep observations where the daily loss was greater than 2.5%. Note that you can graph an `xts` object with `ggplot`, even though it is not a `tibble`. `ggplot` understands the `x = Index` means the date.
+
+
+```r
+eem_losses &lt;- -etf$EEM
+eem_large_losses &lt;- eem_losses[eem_losses &gt; 0.025]
+
+ggplot(eem_large_losses, aes(x = Index, y = EEM)) + 
+  geom_col() +
+  theme_minimal()
+```
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-14-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+---
+# Return facts
+
+1. Return series are heavier-tailed than normal, or **leptokurtic**.
+
+2. The volatility of return series appears to vary over time.
+
+3. Return series show relatively little serial correlation.
+
+4. Series of absolute returns show profound serial correlation.
+
+5. Extreme returns appear in clusters.
+
+6. Returns aggregated over longer periods tend to become more normal and less serially dependent.
+
+---
+
+class: inverse, center, middle
+
+# Advanced Risk Measures
+(Value-at-Risk and Expected Shortfall)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Value-at-Risk (VaR)
+
+- Consider the distribution of losses over a fixed time period (day, week, etc.)
+- 𝛼-VaR is the 𝛼-quantile of the loss distribution
+- 𝛼 known as confidence level (e.g. 95%, 99%)
+- Should lose no more than 𝛼-VaR with probability 𝛼
+
+VaR is a measure of **tail risk**. A simple way to estimate VaR is to line up past returns, sort them by magnitude, and find a return that has 5% worse days and 95% better days. This is one way to find the 95% VaR, since, if history repeats itself, you will lose less than this number with 95% certainty.
+
+Software like Bloomberg lets you look at your current positions and simulate your past returns with your current holdings. What do your worst days look like?
+
+---
+# VaR (cont.)
+
+In its most general form, the Value at Risk measures the potential loss in value of a risky asset or portfolio over a defined period for a given confidence interval. Thus, if the VaR on an asset is $100 million at a one-week, 95% confidence level, there is a only a 5% chance that the value of the asset will drop more than $100 million over any given week.
+
+In 1995, J.P. Morgan provided public access to data on the variances of and covariances across various security and asset classes, that it had used internally for almost a decade to manage risk, and allowed software makers to develop software to measure risk. It titled the service “RiskMetrics” and used the term “Value at Risk” to describe the risk measure that emerged from the data.
+
+Let’s assume that our portfolio returns are normally distributed. If you move 1.65 standard deviations away from the mean, then 5% of your return observations are to your left. This return is your 5% VaR. Given our assumptions, on 5% of days, you lose at least this amount. 
+
+To find the 99% VaR, you would move 2.326 standard deviations from the mean.
+
+---
+# Visualizing VaR
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
+
+
+```r
+print(VaR95)
+```
+
+```
+## [1] -0.01917591
+```
+
+
+---
+# VaR by hand
+
+Let's find the daily VaR for our EEM investment, assuming that put $10,000 into this ETF. We will assume that the returns are normally distributed, just so we can get a feel for the calculation. In reality, you would not do this, certainly for daily returns. 
+
+`\(\text{VaR}_\alpha = \mu + \sigma\times\Phi^{−1}(\alpha)\)`, where `\(\mu\)` is the mean return, `\(\sigma\)` is the standard deviation of returns, `\(\Phi^{−1}\)` is the quantile function of the normal distribution, and `\(\alpha\)` is the quantile. These last two together with the `qnorm` function tell us how many standard deviations to move away from the mean.
+
+
+
+```r
+mu_eem &lt;- mean(etf$EEM)
+std_eem &lt;- sd(etf$EEM)
+
+alpha &lt;- c(0.95, 0.99) 
+qnorm(alpha, mean = mu_eem, sd = std_eem)
+```
+
+```
+## [1] 0.01917591 0.02706756
+```
+
+```r
+qnorm(alpha, mean = mu_eem, sd = std_eem) * 10000
+```
+
+```
+## [1] 191.7591 270.6756
+```
+
+---
+# VaR calcs made easy
+
+We can use tools from `PerformanceAnalytics` to find the VaR of an asset or portfolio. See: http://braverock.com/brian/R/PerformanceAnalytics/html/VaR.html.
+
+The first method assumes that our EEM returns follow a normal distribution - we know that they don't! You get a slightly different answer from the "by hand" example. The second uses the historical data. For both, we are moving across our distribution such that 5% of returns lie to the left of the return given by the function.
+
+
+```r
+VaR(etf$EEM, p = 0.95, method = "gaussian")
+```
+
+```
+##             EEM
+## VaR -0.01891105
+```
+
+```r
+VaR(etf$EEM, p = 0.95, method = "historical")
+```
+
+```
+##             EEM
+## VaR -0.01831473
+```
+
+---
+# Expected short fall
+
+- Tail VaR (TVaR), conditional VaR (CVaR) or **expected shortfall (ES)**
+- `\(\alpha\)`-ES is expected loss **given** that loss exceeds `\(\alpha\)`-VaR
+- This is the expected loss on a really bad day. It takes into account the returns to the left of the VaR, so it will exceed it.
+
+&lt;img src="12-risk_files/figure-html/unnamed-chunk-20-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+# Expected short fall (cont.)
+
+`PerformanceAnalytics` has a built-in ES function as well. See: http://www.braverock.com/brian/R/PerformanceAnalytics/html/ES.html.
+
+
+
+```r
+ES(etf$EEM, p = 0.95, method = "gaussian")
+```
+
+```
+##           EEM
+## ES -0.0237479
+```
+
+```r
+ES(etf$EEM, p = 0.95, method = "historical")
+```
+
+```
+##            EEM
+## ES -0.02625947
+```
+
+Note that ES &gt; VaR. This is the **expected return** on a bad day, so it is the average of all of the returns to the left of the 95% VaR return.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

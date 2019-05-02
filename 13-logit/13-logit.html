@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lecture 13: Logit Models</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Adam Aiken | Elon University" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 13: Logit Models
+## <html>
+<div style="float:left">
+
+</div>
+<hr color='#EB811B' size=1px width=796px>
+</html>
+### Adam Aiken | Elon University
+### FIN 469
+
+---
+
+class: inverse, center, middle
+
+
+
+
+
+&lt;style type="text/css"&gt;
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 40%;
+                                  }
+&lt;/style&gt;
+
+
+
+# Logit Models
+(Can we predict binary outcomes?)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec13.r`.
+
+
+```r
+library(tidyverse)
+library(janitor)
+library(fastDummies)
+library(oddsratio)
+```
+
+- Let's load in our general set of R packages from the `tidyverse`. We will be using the data found on Moodle from the DataCamp course on credit risk analysis. We'll use `fastDummies` to explore a little more about what factor variables are really doing.
+
+- See [here](https://stats.idre.ucla.edu/r/dae/logit-regression/) and [here](http://uc-r.github.io/logistic_regression) for more on logit models, the main topic of these notes.
+
+
+---
+# Getting our data
+We are going to look at credit card default data today. These outcomes are a **classification problem**. Default, yes or no, 1/0? This data is from the DataCamp module on credit risk analysis.
+
+
+
+```r
+loan_data &lt;- readRDS("data/loan_data.rds")
+summary(loan_data)
+```
+
+```
+##   loan_status       loan_amnt        int_rate     grade   
+##  Min.   :0.0000   Min.   :  500   Min.   : 5.42   A:9649  
+##  1st Qu.:0.0000   1st Qu.: 5000   1st Qu.: 7.90   B:9329  
+##  Median :0.0000   Median : 8000   Median :10.99   C:5748  
+##  Mean   :0.1109   Mean   : 9594   Mean   :11.00   D:3231  
+##  3rd Qu.:0.0000   3rd Qu.:12250   3rd Qu.:13.47   E: 868  
+##  Max.   :1.0000   Max.   :35000   Max.   :23.22   F: 211  
+##                                   NA's   :2776    G:  56  
+##    emp_length      home_ownership    annual_inc           age       
+##  Min.   : 0.000   MORTGAGE:12002   Min.   :   4000   Min.   : 20.0  
+##  1st Qu.: 2.000   OTHER   :   97   1st Qu.:  40000   1st Qu.: 23.0  
+##  Median : 4.000   OWN     : 2301   Median :  56424   Median : 26.0  
+##  Mean   : 6.145   RENT    :14692   Mean   :  67169   Mean   : 27.7  
+##  3rd Qu.: 8.000                    3rd Qu.:  80000   3rd Qu.: 30.0  
+##  Max.   :62.000                    Max.   :6000000   Max.   :144.0  
+##  NA's   :809
+```
+
+---
+# Linear models for classification
+
+Logistic regression is a regression model where the response variable Y is **categorical**, as opposed to **continuous**. These types of models are used for **classification**. Why do we need a new model? We want a model that can give us **probabilities** for an event. Regular regression (OLS) isn't set up to do this.
+
+I've plotted our categorical variable, *loan_status*, on the y-axis and *loan_amount* on the x-axis, and added a linear regression line. Negative loan status?
+
+
+```r
+ggplot(loan_data, aes(x = annual_inc, y = loan_status)) + 
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+
+&lt;img src="13-logit_files/figure-html/unnamed-chunk-4-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+```r
+  theme_minimal()
+```
+
+```
+## List of 59
+##  $ line                 :List of 6
+##   ..$ colour       : chr "black"
+##   ..$ size         : num 0.5
+##   ..$ linetype     : num 1
+##   ..$ lineend      : chr "butt"
+##   ..$ arrow        : logi FALSE
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_line" "element"
+##  $ rect                 :List of 5
+##   ..$ fill         : chr "white"
+##   ..$ colour       : chr "black"
+##   ..$ size         : num 0.5
+##   ..$ linetype     : num 1
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_rect" "element"
+##  $ text                 :List of 11
+##   ..$ family       : chr ""
+##   ..$ face         : chr "plain"
+##   ..$ colour       : chr "black"
+##   ..$ size         : num 11
+##   ..$ hjust        : num 0.5
+##   ..$ vjust        : num 0.5
+##   ..$ angle        : num 0
+##   ..$ lineheight   : num 0.9
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : logi FALSE
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.title.x         :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 1
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 2.75pt 0pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.title.x.top     :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 0
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 2.75pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.title.y         :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 1
+##   ..$ angle        : num 90
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 2.75pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.title.y.right   :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 0
+##   ..$ angle        : num -90
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 0pt 2.75pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text            :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : chr "grey30"
+##   ..$ size         : 'rel' num 0.8
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text.x          :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 1
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 2.2pt 0pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text.x.top      :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : num 0
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 2.2pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text.y          :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : num 1
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 2.2pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text.y.right    :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : num 0
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 0pt 2.2pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.ticks           : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ axis.ticks.length    : 'unit' num 2.75pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ axis.line            : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ axis.line.x          : NULL
+##  $ axis.line.y          : NULL
+##  $ legend.background    : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ legend.margin        : 'margin' num [1:4] 5.5pt 5.5pt 5.5pt 5.5pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ legend.spacing       : 'unit' num 11pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ legend.spacing.x     : NULL
+##  $ legend.spacing.y     : NULL
+##  $ legend.key           : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ legend.key.size      : 'unit' num 1.2lines
+##   ..- attr(*, "valid.unit")= int 3
+##   ..- attr(*, "unit")= chr "lines"
+##  $ legend.key.height    : NULL
+##  $ legend.key.width     : NULL
+##  $ legend.text          :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : 'rel' num 0.8
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ legend.text.align    : NULL
+##  $ legend.title         :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : num 0
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ legend.title.align   : NULL
+##  $ legend.position      : chr "right"
+##  $ legend.direction     : NULL
+##  $ legend.justification : chr "center"
+##  $ legend.box           : NULL
+##  $ legend.box.margin    : 'margin' num [1:4] 0cm 0cm 0cm 0cm
+##   ..- attr(*, "valid.unit")= int 1
+##   ..- attr(*, "unit")= chr "cm"
+##  $ legend.box.background: list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ legend.box.spacing   : 'unit' num 11pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ panel.background     : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ panel.border         : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ panel.spacing        : 'unit' num 5.5pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ panel.spacing.x      : NULL
+##  $ panel.spacing.y      : NULL
+##  $ panel.grid           :List of 6
+##   ..$ colour       : chr "grey92"
+##   ..$ size         : NULL
+##   ..$ linetype     : NULL
+##   ..$ lineend      : NULL
+##   ..$ arrow        : logi FALSE
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_line" "element"
+##  $ panel.grid.minor     :List of 6
+##   ..$ colour       : NULL
+##   ..$ size         : 'rel' num 0.5
+##   ..$ linetype     : NULL
+##   ..$ lineend      : NULL
+##   ..$ arrow        : logi FALSE
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_line" "element"
+##  $ panel.ontop          : logi FALSE
+##  $ plot.background      : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ plot.title           :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : 'rel' num 1.2
+##   ..$ hjust        : num 0
+##   ..$ vjust        : num 1
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 5.5pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ plot.subtitle        :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : num 0
+##   ..$ vjust        : num 1
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 0pt 0pt 5.5pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ plot.caption         :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : 'rel' num 0.8
+##   ..$ hjust        : num 1
+##   ..$ vjust        : num 1
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 5.5pt 0pt 0pt 0pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ plot.tag             :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : 'rel' num 1.2
+##   ..$ hjust        : num 0.5
+##   ..$ vjust        : num 0.5
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ plot.tag.position    : chr "topleft"
+##  $ plot.margin          : 'margin' num [1:4] 5.5pt 5.5pt 5.5pt 5.5pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ strip.background     : list()
+##   ..- attr(*, "class")= chr [1:2] "element_blank" "element"
+##  $ strip.placement      : chr "inside"
+##  $ strip.text           :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : chr "grey10"
+##   ..$ size         : 'rel' num 0.8
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : 'margin' num [1:4] 4.4pt 4.4pt 4.4pt 4.4pt
+##   .. ..- attr(*, "valid.unit")= int 8
+##   .. ..- attr(*, "unit")= chr "pt"
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ strip.text.x         : NULL
+##  $ strip.text.y         :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : NULL
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : num -90
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi TRUE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ strip.switch.pad.grid: 'unit' num 2.75pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  $ strip.switch.pad.wrap: 'unit' num 2.75pt
+##   ..- attr(*, "valid.unit")= int 8
+##   ..- attr(*, "unit")= chr "pt"
+##  - attr(*, "class")= chr [1:2] "theme" "gg"
+##  - attr(*, "complete")= logi TRUE
+##  - attr(*, "validate")= logi TRUE
+```
+
+---
+# Let's fit a curve to this data - better!
+
+
+```r
+ggplot(loan_data, aes(x = annual_inc, y = loan_status)) + 
+  geom_jitter(width = 0, height = 0.05, alpha = 0.5) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  theme_minimal()
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+&lt;img src="13-logit_files/figure-html/unnamed-chunk-5-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# janitor::tabyll
+
+Let's use `janitor::tabyll` to look at our data a little more.
+
+
+```r
+loan_data %&gt;% tabyl(loan_status)
+```
+
+```
+##  loan_status     n  percent
+##            0 25865 0.889076
+##            1  3227 0.110924
+```
+
+
+```r
+loan_data %&gt;% tabyl(loan_status, home_ownership)
+```
+
+```
+##  loan_status MORTGAGE OTHER  OWN  RENT
+##            0    10821    80 2049 12915
+##            1     1181    17  252  1777
+```
+
+---
+# janitor::tabyll (cont.)
+
+Use `adorn_` to add more information to the table.
+
+```r
+loan_data %&gt;% tabyl(loan_status, home_ownership) %&gt;%
+  adorn_totals("row") %&gt;%
+  adorn_percentages("row") %&gt;%
+  adorn_pct_formatting() %&gt;%
+  adorn_ns() %&gt;%
+  adorn_title("combined")
+```
+
+```
+##  loan_status/home_ownership      MORTGAGE     OTHER         OWN
+##                           0 41.8% (10821) 0.3% (80) 7.9% (2049)
+##                           1 36.6%  (1181) 0.5% (17) 7.8%  (252)
+##                       Total 41.3% (12002) 0.3% (97) 7.9% (2301)
+##           RENT
+##  49.9% (12915)
+##  55.1%  (1777)
+##  50.5% (14692)
+```
+
+---
+# Outliers
+
+We got one!
+
+
+```r
+ggplot(loan_data, aes(x = annual_inc)) + 
+  geom_histogram() + 
+  geom_rug() +
+  theme_minimal()
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+&lt;img src="13-logit_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+# Missing Values
+We have two categories with missing values. We can delete the missing rows, delete the entire variable, impute a missing value, re-classify, or just keep as is. See [Chapter 12.5](https://r4ds.had.co.nz/tidy-data.html#missing-values-3) of our textbook for more on missing values.
+
+
+```r
+loan_data %&gt;%
+  select(everything()) %&gt;%  
+  summarise_all(list(~sum(is.na(.))))
+```
+
+```
+##   loan_status loan_amnt int_rate grade emp_length home_ownership
+## 1           0         0     2776     0        809              0
+##   annual_inc age
+## 1          0   0
+```
+
+
+```r
+loan_data_no_na_rows &lt;- loan_data %&gt;% drop_na() #drop all rows with missing values
+```
+
+---
+# Setting up factor variables
+
+Our *loan_status* variable should be a **factor** since it is a category. Things will still work with it as a 1/0, but R likes categorical variables to be factors. For example, it is easier to make faceted plots with factor variables.
+
+
+```r
+str(loan_data_no_na_rows)
+```
+
+```
+## 'data.frame':	25571 obs. of  8 variables:
+##  $ loan_status   : int  0 0 0 1 0 1 0 0 0 1 ...
+##  $ loan_amnt     : int  5000 10000 12000 9000 3000 10000 1000 3600 9200 21000 ...
+##  $ int_rate      : num  10.65 13.49 12.69 13.49 9.91 ...
+##  $ grade         : Factor w/ 7 levels "A","B","C","D",..: 2 3 2 3 2 2 4 1 1 2 ...
+##  $ emp_length    : int  10 13 11 0 3 3 0 13 6 17 ...
+##  $ home_ownership: Factor w/ 4 levels "MORTGAGE","OTHER",..: 4 4 3 4 4 4 4 1 4 4 ...
+##  $ annual_inc    : num  24000 49200 75000 30000 15000 ...
+##  $ age           : int  33 24 28 22 22 28 22 27 24 29 ...
+```
+
+```r
+loan_data_no_na_rows &lt;- loan_data_no_na_rows %&gt;%
+  mutate(loan_status = as_factor(as.character(loan_status)))
+```
+
+
+```r
+str(loan_data_no_na_rows$loan_status)
+```
+
+```
+##  Factor w/ 2 levels "0","1": 1 1 1 2 1 2 1 1 1 2 ...
+```
+
+---
+# Setting up factor variables (cont.)
+
+Notice how the *home_ownership* had "MORTGAGE" listed first? When you include factor variables in a regression, R (mathematically) needs to drop one from the model (if you include an intercept). In other words, one factor is the "base case" and all of the estimates are relative to this base case. 
+
+If you've taken some statistics, factor variables are just R's way of creating indicator/dummy variables.
+
+By default, R drops the first factor from the model and treats that as the base case. But, I want to see an estimate for MORTGAGE and would rather have OTHER be the base case (very few obs are OTHER). We can use `fct_relevel` to re-order the factors.
+
+
+```r
+summary(loan_data_no_na_rows$home_ownership)
+```
+
+```
+## MORTGAGE    OTHER      OWN     RENT 
+##    10526       85     1945    13015
+```
+
+---
+# Setting up factor variables (cont.)
+
+
+```r
+loan_data_no_na_rows &lt;- loan_data_no_na_rows %&gt;%
+ mutate(home_ownership = fct_relevel(home_ownership, "OTHER", "MORTGAGE", "OWN", "RENT"))
+summary(loan_data_no_na_rows$home_ownership)
+```
+
+```
+##    OTHER MORTGAGE      OWN     RENT 
+##       85    10526     1945    13015
+```
+
+---
+# Setting up factor variables (cont.)
+
+Let's also look at more traditional **indicator** variables, created by hand. This may help you understand what factors are doing. The function `fastDummies::dummy_cols` takes factor and character variables and breaks them out into individual variables with 1/0 values. See the next slide.
+
+
+```r
+loan_data_no_na_rows &lt;- fastDummies::dummy_cols(loan_data_no_na_rows, 
+                        select_columns = "home_ownership")
+```
+
+---
+# Setting up factor variables (cont.)
+
+Let's look at our new variables.
+
+.code-small[
+
+```r
+summary(loan_data_no_na_rows)
+```
+
+```
+##  loan_status   loan_amnt        int_rate     grade      emp_length    
+##  0:22779     Min.   :  500   Min.   : 5.42   A:8412   Min.   : 0.000  
+##  1: 2792     1st Qu.: 5000   1st Qu.: 7.90   B:8174   1st Qu.: 2.000  
+##              Median : 8000   Median :10.99   C:5079   Median : 4.000  
+##              Mean   : 9655   Mean   :11.03   D:2888   Mean   : 6.127  
+##              3rd Qu.:12500   3rd Qu.:13.48   E: 783   3rd Qu.: 8.000  
+##              Max.   :35000   Max.   :23.22   F: 182   Max.   :62.000  
+##                                              G:  53                   
+##   home_ownership    annual_inc           age        home_ownership_RENT
+##  OTHER   :   85   Min.   :   4000   Min.   : 20.0   Min.   :0.000      
+##  MORTGAGE:10526   1st Qu.:  40000   1st Qu.: 23.0   1st Qu.:0.000      
+##  OWN     : 1945   Median :  57006   Median : 26.0   Median :1.000      
+##  RENT    :13015   Mean   :  67737   Mean   : 27.7   Mean   :0.509      
+##                   3rd Qu.:  80004   3rd Qu.: 30.0   3rd Qu.:1.000      
+##                   Max.   :6000000   Max.   :144.0   Max.   :1.000      
+##                                                                        
+##  home_ownership_OWN home_ownership_MORTGAGE home_ownership_OTHER
+##  Min.   :0.00000    Min.   :0.0000          Min.   :0.000000    
+##  1st Qu.:0.00000    1st Qu.:0.0000          1st Qu.:0.000000    
+##  Median :0.00000    Median :0.0000          Median :0.000000    
+##  Mean   :0.07606    Mean   :0.4116          Mean   :0.003324    
+##  3rd Qu.:0.00000    3rd Qu.:1.0000          3rd Qu.:0.000000    
+##  Max.   :1.00000    Max.   :1.0000          Max.   :1.000000    
+## 
+```
+]
+
+
+---
+
+class: inverse, center, middle
+
+# Logit models
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# What is a logit model?
+The true probability of defaulting must fall between 0 and 1. A logit function, show below, will satisfy this requirement. `\(p(x)\)` is the probability of the event, loan default in this case.
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="img/logit.png" alt="The logit function" width="50%" /&gt;
+&lt;p class="caption"&gt;The logit function&lt;/p&gt;
+&lt;/div&gt;
+
+We are going to use the `glm` function to model the outcome. The `glm` function fits **generalized linear models**, a class of models that includes logistic regression. The syntax of the `glm` function is similar to that of `lm`, except that we must pass the argument `family = binomial`.
+
+
+---
+# What is a logit model? (cont.)
+
+In the background the glm uses maximum likelihood to fit the model. The basic intuition behind using maximum likelihood to fit a logistic regression model is as follows: 
+
+We seek estimates for `\(\beta_0\)` an `\(\beta_1\)` that get us a predicted probability of default for each individual, `\(p(x_i)\)`, corresponds as closely as possible to the individual’s actual observed default status. In other words, we plug in beta estimates until we get numbers "close" to 1 for those that default and "close" to zero for those that do not. This is done using what is called a **liklihood function**.
+
+Ordinary least squares regresison (OLS) actually works in a similar manner, where betas are chosen to minimize the sum of squared residuals (errors).
+
+Essentially, we pick a model that we think can explain our data. This could be OLS, logit, or something else. Then, we find the parameters to plug into that model that give us the best possible predicted values based on minimizing some kind of error function.
+
+---
+
+# A simple model
+Let's see if renting predicts default. Note that I am not using the complete set of all possible ownership variables or the *home_ownership* factor variable. This is a very simple model, where we compare renting to everything else and include no other characteristics.
+
+
+.code-small[
+
+```r
+log_model &lt;- glm(loan_status ~ home_ownership_RENT, family= "binomial", data = loan_data_no_na_rows)
+summary(log_model)
+```
+
+```
+## 
+## Call:
+## glm(formula = loan_status ~ home_ownership_RENT, family = "binomial", 
+##     data = loan_data_no_na_rows)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5039  -0.5039  -0.4560  -0.4560   2.1518  
+## 
+## Coefficients:
+##                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)         -2.21111    0.02991 -73.923  &lt; 2e-16 ***
+## home_ownership_RENT  0.21153    0.04033   5.245 1.56e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 17634  on 25570  degrees of freedom
+## Residual deviance: 17607  on 25569  degrees of freedom
+## AIC: 17611
+## 
+## Number of Fisher Scoring iterations: 4
+```
+]
+
+---
+# Interpreting coefficients
+
+The output from that regression is hard to interpret. What does the coefficeint on home_ownership_RENT of 0.21153 mean? This is a **log odds ratio**. Let's convert this to an **odds ratio**, which is easier to think about.
+
+An odds ratio is defined as: odds(success) = p/(1-p), where p = probability of the event happening. So, an 80% chance of happening = .8/.2 = 4:1 odds. 1:1 odds is a 50/50 chance. The logit model gives us the log of this number. So, we can use the inverse of the log, the natural number e, to "undo" the log and get us the odds.
+
+
+```r
+exp(coef(log_model))
+```
+
+```
+##         (Intercept) home_ownership_RENT 
+##           0.1095794           1.2355624
+```
+
+What do these numbers mean? If someone rents, this increases the odds of default by 1.24 versus all other options.
+
+For more, see [here](https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-do-i-interpret-odds-ratios-in-logistic-regression/).
+
+---
+# Interpreting coefficients (cont.)
+
+We can use `oddsratio:or_glm` to find odds ratios and confidence intervals for us.
+
+
+```r
+or_glm(data = loan_data_no_na_rows, model = log_model, 
+       incr = list(home_ownership_RENT = 1))
+```
+
+```
+##             predictor oddsratio CI_low (2.5 %) CI_high (97.5 %) increment
+## 1 home_ownership_RENT     1.236          1.142            1.337         1
+```
+
+
+---
+# Interpreting coefficients (cont.)
+
+Odds ratios are **not probabilities**. Let's calculate the probability of default of home_ownership_RENT = 1. The `predict` function let's us move from odds ratios to probabilities. The `data.frame` function is creating a new data set that just has one row and column. This tells `predict` what to set the values at to find the probabilities.
+
+
+```r
+predict(log_model, data.frame(home_ownership_RENT = 1), type = "response")
+```
+
+```
+##        1 
+## 0.119247
+```
+
+So, being a renter increases your probability of default by about 11.9% compared to all others.
+
+---
+# Interpreting coefficients (cont.)
+
+Here is that calculation "by hand". We can do this with the logit function formula (see earlier slide).
+
+
+```r
+intercept &lt;- coef(log_model)[1]
+beta &lt;- coef(log_model)[2]
+rent_default &lt;- intercept + 1 * beta
+rent_default_odds &lt;- exp(rent_default)
+rent_default_prob &lt;- rent_default_odds / (1 + rent_default_odds)
+rent_default_prob
+```
+
+```
+## (Intercept) 
+##    0.119247
+```
+
+---
+# Using a continuous predictor
+
+Let's swap our our renting indicator for **annual_inc**, which is a continuous variable.
+
+.code-small[
+
+```r
+log_model_cont &lt;- glm(loan_status ~ annual_inc, family= "binomial", data = loan_data_no_na_rows)
+summary(log_model_cont)
+```
+
+```
+## 
+## Call:
+## glm(formula = loan_status ~ annual_inc, family = "binomial", 
+##     data = loan_data_no_na_rows)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5575  -0.5071  -0.4823  -0.4409   3.5279  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.762e+00  4.087e-02 -43.112   &lt;2e-16 ***
+## annual_inc  -5.309e-06  5.889e-07  -9.014   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 17634  on 25570  degrees of freedom
+## Residual deviance: 17536  on 25569  degrees of freedom
+## AIC: 17540
+## 
+## Number of Fisher Scoring iterations: 5
+```
+]
+---
+# Using a continuous predictor
+We can find the odds ratio here too. An odds ratio below 1 means that the liklihood of default is **decreasing** as annual income increases. Makes sense!
+
+We can read this number as "Increasing income by $10,000 reduces the odds of default by 1-0.948, or 0.052 (5.2%)."
+
+
+```r
+or_glm(data = loan_data_no_na_rows, model = log_model_cont,
+       incr = list(annual_inc = 10000))
+```
+
+```
+##    predictor oddsratio CI_low (2.5 %) CI_high (97.5 %) increment
+## 1 annual_inc     0.948          0.937            0.959     10000
+```
+
+---
+
+# More than one variable
+
+.code-small[
+
+```r
+log_model_2 &lt;- glm(loan_status ~ annual_inc + home_ownership_RENT, family = "binomial", data = loan_data_no_na_rows)
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```r
+summary(log_model_2)
+```
+
+```
+## 
+## Call:
+## glm(formula = loan_status ~ annual_inc + home_ownership_RENT, 
+##     family = "binomial", data = loan_data_no_na_rows)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5650  -0.5090  -0.4797  -0.4363   3.4161  
+## 
+## Coefficients:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)         -1.851e+00  5.187e-02 -35.678  &lt; 2e-16 ***
+## annual_inc          -4.878e-06  6.037e-07  -8.081 6.44e-16 ***
+## home_ownership_RENT  1.161e-01  4.176e-02   2.780  0.00543 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 17634  on 25570  degrees of freedom
+## Residual deviance: 17528  on 25568  degrees of freedom
+## AIC: 17534
+## 
+## Number of Fisher Scoring iterations: 5
+```
+]
+---
+# More than one variable (cont.)
+
+
+```r
+or_glm(data = loan_data_no_na_rows, model = log_model_2, 
+       incr = list(annual_inc = 10000, home_ownership_RENT = 1))
+```
+
+```
+##             predictor oddsratio CI_low (2.5 %) CI_high (97.5 %) increment
+## 1          annual_inc     0.952          0.941            0.964     10000
+## 2 home_ownership_RENT     1.123          1.035            1.219         1
+```
+---
+# More than one variable (cont.)
+Logits can be tricker to interpret, as we've seen. Here's I am asking: If a person earns the mean annual income and they rent, what is the increase in the probability of default vs. not renting?
+
+
+```r
+mean_data &lt;- with(loan_data_no_na_rows, 
+                  data.frame(annual_inc = mean(annual_inc), home_ownership_RENT = 1))
+mean_data$prob &lt;- predict(log_model_2, newdata = mean_data, type = "response")
+mean_data
+```
+
+```
+##   annual_inc home_ownership_RENT      prob
+## 1   67736.89                   1 0.1125553
+```
+
+See [here](https://stats.idre.ucla.edu/r/dae/logit-regression/) for more on finding probabilities from logit models in R.
+---
+
+# A full model
+
+.code-small[
+
+```r
+log_model_3 &lt;- glm(loan_status ~ age + home_ownership + loan_amnt + grade + annual_inc + age, family = "binomial", data = loan_data_no_na_rows)
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```r
+summary(log_model_3)
+```
+
+```
+## 
+## Call:
+## glm(formula = loan_status ~ age + home_ownership + loan_amnt + 
+##     grade + annual_inc + age, family = "binomial", data = loan_data_no_na_rows)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.0840  -0.5293  -0.4425  -0.3383   3.4495  
+## 
+## Coefficients:
+##                          Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -1.726e+00  3.031e-01  -5.693 1.25e-08 ***
+## age                    -6.053e-03  3.430e-03  -1.765   0.0776 .  
+## home_ownershipMORTGAGE -5.446e-01  2.866e-01  -1.900   0.0574 .  
+## home_ownershipOWN      -6.263e-01  2.943e-01  -2.128   0.0333 *  
+## home_ownershipRENT     -5.746e-01  2.859e-01  -2.010   0.0444 *  
+## loan_amnt              -1.163e-06  3.626e-06  -0.321   0.7483    
+## gradeB                  6.647e-01  6.018e-02  11.045  &lt; 2e-16 ***
+## gradeC                  1.034e+00  6.250e-02  16.543  &lt; 2e-16 ***
+## gradeD                  1.300e+00  6.895e-02  18.859  &lt; 2e-16 ***
+## gradeE                  1.508e+00  1.024e-01  14.731  &lt; 2e-16 ***
+## gradeF                  1.999e+00  1.746e-01  11.454  &lt; 2e-16 ***
+## gradeG                  2.394e+00  2.944e-01   8.130 4.28e-16 ***
+## annual_inc             -5.642e-06  6.787e-07  -8.313  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 17634  on 25570  degrees of freedom
+## Residual deviance: 16923  on 25558  degrees of freedom
+## AIC: 16949
+## 
+## Number of Fisher Scoring iterations: 5
+```
+]
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

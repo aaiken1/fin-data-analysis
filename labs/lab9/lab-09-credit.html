@@ -503,9 +503,9 @@ summary(Default)</code></pre>
 pam_fit &lt;- pam(gower_dist, diss = TRUE, k = 2) #pam function groups all observations into one of k categories. I'm using 2.
 
 pam_results &lt;- default %&gt;%
-  mutate(cluster = pam_fit$clustering) %&gt;% #pam_fit$clustering contains the cluster number for all observations, in the order the appear on our data
+  mutate(cluster = pam_fit$clustering) %&gt;% #pam_fit$clustering contains the cluster number for all observations in order
   group_by(cluster) %&gt;%
-  do(the_summary = summary(.)) #quick way to run summary across all variables by cluster and then output the results to a list called the_summary
+  do(the_summary = summary(.)) #run summary across all variables by cluster and then output the results to a list called the_summary
 
 pam_results$the_summary</code></pre>
 <p>Check your global environment. Do you see a large matrix called <code>gower_dist</code>?</p>

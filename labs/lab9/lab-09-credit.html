@@ -443,7 +443,7 @@ counter-reset: subitem;
 
 
 <h1 class="title toc-ignore">Lab 09 - Measuring Default Risk</h1>
-<h3 class="subtitle"><em>An Introduction to Logit Models</em></h3>
+<h3 class="subtitle"><em>An Introduction to Logit and Classification</em></h3>
 
 
 
@@ -452,7 +452,7 @@ counter-reset: subitem;
 <h1>Getting set up</h1>
 <div id="packages" class="section level2">
 <h2>Packages</h2>
-<p>We will again work with the <code>tidyverse</code> package. You’ll also want the <code>ISLR</code> package, which contains some credit default data that we are going to explore. The <code>oddsratio</code> package helps us deal with logit model outputs. We start by loading the packages. Create an R chunk called set-up.</p>
+<p>We will again work with the <code>tidyverse</code> package. You’ll also want the <code>ISLR</code> package, which contains some <strong>credit default data</strong> that we are going to explore. The <code>oddsratio</code> package helps us deal with logit model outputs. We start by loading the packages. Create an R chunk called set-up.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(ISLR)</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(oddsratio)</a>
@@ -483,7 +483,7 @@ counter-reset: subitem;
 <h1>Our questions</h1>
 <p>In this brief lab, we are going to look at a different set of default data and learn how to apply logit models to estimate default risk.</p>
 <ol style="list-style-type: decimal">
-<li>We are going to use the <code>Default</code> data from the <code>ISLR</code> package. Once you load that package, the data will be “visible” to R. However, you’ll need to assign <code>Default</code> to a new data set in the global environment using the <code>&lt;-</code> operator in order to see the data. However, note that you can still use <code>Default</code> without adding it to the global environment. Try these commands to see what I mean:</li>
+<li>We are going to use the <code>Default</code> data from the <code>ISLR</code> package. This is <strong>credit card default data</strong>. Once you load that package, the data will be “visible” to R. However, you’ll need to assign <code>Default</code> to a new data set in the global environment using the <code>&lt;-</code> operator in order to see the data. However, note that you can still use <code>Default</code> without adding it to the global environment. Try these commands to see what I mean:</li>
 </ol>
 <pre><code>default &lt;- Default
 summary(default)
@@ -494,7 +494,10 @@ summary(Default)</code></pre>
 <li><p>Run a logit model to explain <em>default</em> by student category and show the output. Interpret the sign and significance of the coefficient for <em>student</em>.</p></li>
 <li><p>Transform the logit odds ratio into an odds ratio using the two methods we saw in class.</p></li>
 <li><p>Run a logit model to explain <em>default</em> using the full set of variables. Interpret the sign and significance of all coefficients. Does anything change? Also give the odds ratios for these results. Use increments of $100 for the balance variable and $1000 for the income variable.</p></li>
-<li><p>Let’s end with something new. Statistics and computer science have been merging together to create tools that are often described as <strong>machine learning</strong>. Some of these tools are actually quite old. For example, logit and OLS regression are examples of what are called <strong>supervised machine learning</strong>. In this category of models, we have data that is labeled (e.g. default is yes or no), or we have a continuous outcome (e.g. future stock returns). We then have other variables that we can use to explain and predict these labels/outcomes. So, we’ve been using machine learning all semester!</p></li>
+</ol>
+<p>In the example we saw in class, loan balance did not affect the default outcome. Why is that different here?</p>
+<ol start="7" style="list-style-type: decimal">
+<li>Let’s end with something new. Statistics and computer science have been merging together to create tools that are often described as <strong>machine learning</strong>. Some of these tools are actually quite old. For example, logit and OLS regression are examples of what are called <strong>supervised machine learning</strong>. In this category of models, we have data that is labeled (e.g. default is yes or no), or we have a continuous outcome (e.g. future stock returns). We then have other variables that we can use to explain and predict these labels/outcomes. So, we’ve been using machine learning all semester!</li>
 </ol>
 <p>However, there is another set of techniques called <strong>unsupervised machine learning</strong>. For these types of models, we don’t have labels or outcomes that we are trying to explain or predict. Instead, we are just trying to learn about the structure of our data. One common example of this type of model is called <strong>clustering</strong>. Clustering algorithms give instructions for how to try to form groups from our data. We can then look at these groups and see if they make sense. For example, we might use a clustering algorithm on a group of firm characteristics and then look and see if the groups are related to industries, macroeconomic risk exposures, country exposures, etc. One interesting part of clustering is that sometimes groups emerge <em>ex post</em> that you wouldn’t have thought of <em>ex ante</em>.</p>
 <p><label for="tufte-mn-2" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-2" class="margin-toggle"><span class="marginnote"><span style="display: block;">**You can read more about clustering <a href="https://towardsdatascience.com/supervised-vs-unsupervised-learning-14f68e32ea8d">here</a> and <a href="https://uc-r.github.io/kmeans_clustering">here</a>. The <em>gower</em> example that we are doing is discussed <a href="https://www.r-bloggers.com/clustering-mixed-data-types-in-r/">here</a>.</span></span></p>

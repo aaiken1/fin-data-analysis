@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 4: Data Wrangling in the Tidyverse</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -51,7 +51,7 @@ Open up your R Project for this class. You can do this under File:Open Project. 
 ```r
 # install.package("tidyverse")
 library(tidyverse)
-ncbreweries &lt;- read_csv("data/ncbreweries.csv")
+ncbreweries &lt;- read_csv(here::here("04-tidy-wrangling", "data", "ncbreweries.csv"))
 ```
 
 --
@@ -265,13 +265,13 @@ glimpse(ncbreweries)
 ```
 ## Observations: 251
 ## Variables: 7
-## $ name      &lt;chr&gt; "217 Brew Works", "3rd Rock Brewing Company", "7 Clans…
-## $ city      &lt;chr&gt; "Wilson", "Trenton", "Cherokee", "Andrews", "Elkin", "…
-## $ type      &lt;chr&gt; "Microbrewery", "Microbrewery", "Client Brewer", "Micr…
-## $ beercount &lt;dbl&gt; 10, 12, 1, 18, 8, 78, 15, 87, 106, 59, 16, 29, 16, 6, …
-## $ est       &lt;dbl&gt; 2017, 2016, 2018, 2014, 2017, 2013, 2017, 2003, 2011, …
-## $ status    &lt;chr&gt; "Active", "Active", "Active", "Active", "Active", "Act…
-## $ url       &lt;chr&gt; "https://www.ratebeer.com//brewers/217-brew-works/3090…
+## $ name      &lt;chr&gt; "217 Brew Works", "3rd Rock Brewing Company", "7 Clans Brew…
+## $ city      &lt;chr&gt; "Wilson", "Trenton", "Cherokee", "Andrews", "Elkin", "Boone…
+## $ type      &lt;chr&gt; "Microbrewery", "Microbrewery", "Client Brewer", "Microbrew…
+## $ beercount &lt;dbl&gt; 10, 12, 1, 18, 8, 78, 15, 87, 106, 59, 16, 29, 16, 6, 39, 7…
+## $ est       &lt;dbl&gt; 2017, 2016, 2018, 2014, 2017, 2013, 2017, 2003, 2011, 2008,…
+## $ status    &lt;chr&gt; "Active", "Active", "Active", "Active", "Active", "Active",…
+## $ url       &lt;chr&gt; "https://www.ratebeer.com//brewers/217-brew-works/30902/", …
 ```
 ]
 
@@ -325,17 +325,17 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 9 x 7
-##   name          city  type     beercount   est status url                  
-##   &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;        &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                
-## 1 Barrel Cultu… Durh… Microbr…        29  2017 Active https://www.ratebeer…
-## 2 Bull City Bu… Durh… Brewpub…        64  2011 Active https://www.ratebeer…
-## 3 Bull City Ci… Durh… Commerc…         9  2014 Active https://www.ratebeer…
-## 4 Bull Durham … Durh… Microbr…         7  2015 Active https://www.ratebeer…
-## 5 Durty Bull B… Durh… Microbr…        19  2016 Active https://www.ratebeer…
-## 6 Fullsteam Br… Durh… Microbr…       131  2009 Active https://www.ratebeer…
-## 7 Ponysaurus B… Durh… Microbr…        26  2013 Active https://www.ratebeer…
-## 8 G2B Gastropu… Durh… Brewpub…        18  2015 Closed https://www.ratebeer…
-## 9 Triangle Bre… Durh… Microbr…        21  2007 Closed https://www.ratebeer…
+##   name           city   type     beercount   est status url                     
+##   &lt;chr&gt;          &lt;chr&gt;  &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                   
+## 1 Barrel Cultur… Durham Microbr…        29  2017 Active https://www.ratebeer.co…
+## 2 Bull City Bur… Durham Brewpub…        64  2011 Active https://www.ratebeer.co…
+## 3 Bull City Cid… Durham Commerc…         9  2014 Active https://www.ratebeer.co…
+## 4 Bull Durham B… Durham Microbr…         7  2015 Active https://www.ratebeer.co…
+## 5 Durty Bull Br… Durham Microbr…        19  2016 Active https://www.ratebeer.co…
+## 6 Fullsteam Bre… Durham Microbr…       131  2009 Active https://www.ratebeer.co…
+## 7 Ponysaurus Br… Durham Microbr…        26  2013 Active https://www.ratebeer.co…
+## 8 G2B Gastropub… Durham Brewpub…        18  2015 Closed https://www.ratebeer.co…
+## 9 Triangle Brew… Durham Microbr…        21  2007 Closed https://www.ratebeer.co…
 ```
 
 ---
@@ -351,9 +351,9 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 1 x 7
-##   name       city   type      beercount   est status url                   
-##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;         &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 
-## 1 Bull City… Durham Commerci…         9  2014 Active https://www.ratebeer.…
+##   name        city   type      beercount   est status url                       
+##   &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                     
+## 1 Bull City … Durham Commerci…         9  2014 Active https://www.ratebeer.com/…
 ```
 ---
 
@@ -389,10 +389,10 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 2 x 7
-##   name        city    type    beercount   est status url                   
-##   &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 
-## 1 Bear Creek… Bear C… Microb…         6  2012 Active https://www.ratebeer.…
-## 2 BearWaters… Canton  Microb…        39  2012 Active https://www.ratebeer.…
+##   name          city    type    beercount   est status url                      
+##   &lt;chr&gt;         &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                    
+## 1 Bear Creek B… Bear C… Microb…         6  2012 Active https://www.ratebeer.com…
+## 2 BearWaters B… Canton  Microb…        39  2012 Active https://www.ratebeer.com…
 ```
 
 ---
@@ -445,18 +445,18 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 251 x 6
-##    name          city     beercount   est status url                       
-##    &lt;chr&gt;         &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                     
-##  1 217 Brew Wor… Wilson          10  2017 Active https://www.ratebeer.com/…
-##  2 3rd Rock Bre… Trenton         12  2016 Active https://www.ratebeer.com/…
-##  3 7 Clans Brew… Cherokee         1  2018 Active https://www.ratebeer.com/…
-##  4 Andrews Brew… Andrews         18  2014 Active https://www.ratebeer.com/…
-##  5 Angry Troll … Elkin            8  2017 Active https://www.ratebeer.com/…
-##  6 Appalachian … Boone           78  2013 Active https://www.ratebeer.com/…
-##  7 Archetype Br… Ashevil…        15  2017 Active https://www.ratebeer.com/…
-##  8 Asheville Br… Ashevil…        87  2003 Active https://www.ratebeer.com/…
-##  9 Ass Clown Br… Corneli…       106  2011 Active https://www.ratebeer.com/…
-## 10 Aviator Brew… Fuquay …        59  2008 Active https://www.ratebeer.com/…
+##    name           city      beercount   est status url                          
+##    &lt;chr&gt;          &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                        
+##  1 217 Brew Works Wilson           10  2017 Active https://www.ratebeer.com//br…
+##  2 3rd Rock Brew… Trenton          12  2016 Active https://www.ratebeer.com//br…
+##  3 7 Clans Brewi… Cherokee          1  2018 Active https://www.ratebeer.com//br…
+##  4 Andrews Brewi… Andrews          18  2014 Active https://www.ratebeer.com//br…
+##  5 Angry Troll B… Elkin             8  2017 Active https://www.ratebeer.com//br…
+##  6 Appalachian M… Boone            78  2013 Active https://www.ratebeer.com//br…
+##  7 Archetype Bre… Asheville        15  2017 Active https://www.ratebeer.com//br…
+##  8 Asheville Bre… Asheville        87  2003 Active https://www.ratebeer.com//br…
+##  9 Ass Clown Bre… Cornelius       106  2011 Active https://www.ratebeer.com//br…
+## 10 Aviator Brewi… Fuquay V…        59  2008 Active https://www.ratebeer.com//br…
 ## # … with 241 more rows
 ```
 
@@ -558,18 +558,18 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 251 x 7
-##    name        beercount city    type      est status url                  
-##    &lt;chr&gt;           &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                
-##  1 217 Brew W…        10 Wilson  Microb…  2017 Active https://www.ratebeer…
-##  2 3rd Rock B…        12 Trenton Microb…  2016 Active https://www.ratebeer…
-##  3 7 Clans Br…         1 Cherok… Client…  2018 Active https://www.ratebeer…
-##  4 Andrews Br…        18 Andrews Microb…  2014 Active https://www.ratebeer…
-##  5 Angry Trol…         8 Elkin   Microb…  2017 Active https://www.ratebeer…
-##  6 Appalachia…        78 Boone   Microb…  2013 Active https://www.ratebeer…
-##  7 Archetype …        15 Ashevi… Microb…  2017 Active https://www.ratebeer…
-##  8 Asheville …        87 Ashevi… Brewpub  2003 Active https://www.ratebeer…
-##  9 Ass Clown …       106 Cornel… Microb…  2011 Active https://www.ratebeer…
-## 10 Aviator Br…        59 Fuquay… Microb…  2008 Active https://www.ratebeer…
+##    name         beercount city     type      est status url                     
+##    &lt;chr&gt;            &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                   
+##  1 217 Brew Wo…        10 Wilson   Microb…  2017 Active https://www.ratebeer.co…
+##  2 3rd Rock Br…        12 Trenton  Microb…  2016 Active https://www.ratebeer.co…
+##  3 7 Clans Bre…         1 Cherokee Client…  2018 Active https://www.ratebeer.co…
+##  4 Andrews Bre…        18 Andrews  Microb…  2014 Active https://www.ratebeer.co…
+##  5 Angry Troll…         8 Elkin    Microb…  2017 Active https://www.ratebeer.co…
+##  6 Appalachian…        78 Boone    Microb…  2013 Active https://www.ratebeer.co…
+##  7 Archetype B…        15 Ashevil… Microb…  2017 Active https://www.ratebeer.co…
+##  8 Asheville B…        87 Ashevil… Brewpub  2003 Active https://www.ratebeer.co…
+##  9 Ass Clown B…       106 Corneli… Microb…  2011 Active https://www.ratebeer.co…
+## 10 Aviator Bre…        59 Fuquay … Microb…  2008 Active https://www.ratebeer.co…
 ## # … with 241 more rows
 ```
 
@@ -587,13 +587,13 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 5 x 7
-##   name        city   type    beercount   est status url                    
-##   &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                  
-## 1 217 Brew W… Wilson Microb…        10  2017 Active https://www.ratebeer.c…
-## 2 3rd Rock B… Trent… Microb…        12  2016 Active https://www.ratebeer.c…
-## 3 7 Clans Br… Chero… Client…         1  2018 Active https://www.ratebeer.c…
-## 4 Andrews Br… Andre… Microb…        18  2014 Active https://www.ratebeer.c…
-## 5 Angry Trol… Elkin  Microb…         8  2017 Active https://www.ratebeer.c…
+##   name         city    type    beercount   est status url                       
+##   &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                     
+## 1 217 Brew Wo… Wilson  Microb…        10  2017 Active https://www.ratebeer.com/…
+## 2 3rd Rock Br… Trenton Microb…        12  2016 Active https://www.ratebeer.com/…
+## 3 7 Clans Bre… Cherok… Client…         1  2018 Active https://www.ratebeer.com/…
+## 4 Andrews Bre… Andrews Microb…        18  2014 Active https://www.ratebeer.com/…
+## 5 Angry Troll… Elkin   Microb…         8  2017 Active https://www.ratebeer.com/…
 ```
 
 ---
@@ -611,13 +611,13 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 5 x 7
-##   name            city   type    beercount   est status url                
-##   &lt;chr&gt;           &lt;chr&gt;  &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;              
-## 1 Sweet Taters    Rocky… Brewpu…         9  2016 Closed https://www.ratebe…
-## 2 Triangle Brewi… Durham Microb…        21  2007 Closed https://www.ratebe…
-## 3 White Rabbit B… Angier Microb…        19  2013 Closed https://www.ratebe…
-## 4 Williamsville … Farmv… Brewpub         5  2000 Closed https://www.ratebe…
-## 5 Wolf Beer Comp… Wilmi… Client…         2  2009 Closed https://www.ratebe…
+##   name             city    type    beercount   est status url                   
+##   &lt;chr&gt;            &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 
+## 1 Sweet Taters     Rocky … Brewpu…         9  2016 Closed https://www.ratebeer.…
+## 2 Triangle Brewin… Durham  Microb…        21  2007 Closed https://www.ratebeer.…
+## 3 White Rabbit Br… Angier  Microb…        19  2013 Closed https://www.ratebeer.…
+## 4 Williamsville B… Farmvi… Brewpub         5  2000 Closed https://www.ratebeer.…
+## 5 Wolf Beer Compa… Wilmin… Client…         2  2009 Closed https://www.ratebeer.…
 ```
 
 ---
@@ -808,19 +808,19 @@ An example using the latter:
 ```r
 ncbreweries %&gt;% 
   group_by(type) %&gt;% 
-  summarise_if(is.numeric, funs(avg=mean), na.rm=T) %&gt;%
+  summarise_if(is.numeric, list(mean = mean), na.rm=T) %&gt;%
   head(5)
 ```
 
 ```
 ## # A tibble: 5 x 3
-##   type               beercount_avg est_avg
-##   &lt;chr&gt;                      &lt;dbl&gt;   &lt;dbl&gt;
-## 1 Brewpub                     44.9   2010.
-## 2 Brewpub/Brewery             37.7   2013.
-## 3 Client Brewer                5     2010.
-## 4 Commercial Brewery          10.7   2016 
-## 5 Microbrewery                31.3   2012.
+##   type               beercount_mean est_mean
+##   &lt;chr&gt;                       &lt;dbl&gt;    &lt;dbl&gt;
+## 1 Brewpub                      44.9    2010.
+## 2 Brewpub/Brewery              37.7    2013.
+## 3 Client Brewer                 5      2010.
+## 4 Commercial Brewery           10.7    2016 
+## 5 Microbrewery                 31.3    2012.
 ```
 
 
@@ -910,18 +910,18 @@ ncbreweries %&gt;%
 
 ```
 ## # A tibble: 251 x 9
-##    name    city   type  beercount   est status url       new   est_category
-##    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;     &lt;lgl&gt; &lt;chr&gt;       
-##  1 217 Br… Wilson Micr…        10  2017 Active https://… TRUE  New         
-##  2 3rd Ro… Trent… Micr…        12  2016 Active https://… TRUE  New         
-##  3 7 Clan… Chero… Clie…         1  2018 Active https://… TRUE  New         
-##  4 Andrew… Andre… Micr…        18  2014 Active https://… TRUE  New         
-##  5 Angry … Elkin  Micr…         8  2017 Active https://… TRUE  New         
-##  6 Appala… Boone  Micr…        78  2013 Active https://… TRUE  New         
-##  7 Archet… Ashev… Micr…        15  2017 Active https://… TRUE  New         
-##  8 Ashevi… Ashev… Brew…        87  2003 Active https://… TRUE  New         
-##  9 Ass Cl… Corne… Micr…       106  2011 Active https://… TRUE  New         
-## 10 Aviato… Fuqua… Micr…        59  2008 Active https://… TRUE  New         
+##    name     city   type   beercount   est status url          new   est_category
+##    &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;        &lt;lgl&gt; &lt;chr&gt;       
+##  1 217 Bre… Wilson Micro…        10  2017 Active https://www… TRUE  New         
+##  2 3rd Roc… Trent… Micro…        12  2016 Active https://www… TRUE  New         
+##  3 7 Clans… Chero… Clien…         1  2018 Active https://www… TRUE  New         
+##  4 Andrews… Andre… Micro…        18  2014 Active https://www… TRUE  New         
+##  5 Angry T… Elkin  Micro…         8  2017 Active https://www… TRUE  New         
+##  6 Appalac… Boone  Micro…        78  2013 Active https://www… TRUE  New         
+##  7 Archety… Ashev… Micro…        15  2017 Active https://www… TRUE  New         
+##  8 Ashevil… Ashev… Brewp…        87  2003 Active https://www… TRUE  New         
+##  9 Ass Clo… Corne… Micro…       106  2011 Active https://www… TRUE  New         
+## 10 Aviator… Fuqua… Micro…        59  2008 Active https://www… TRUE  New         
 ## # … with 241 more rows
 ```
 
@@ -947,9 +947,10 @@ ncbreweries &lt;- ncbreweries %&gt;%
 
 # For next class...
 
-- The Intro to the `Tidyverse` Datacamp module is due Monday 2/25 at 11:59pm.
-- Lab #2 covering these `dplyr` functions and more is also due Monday 2/25 at 11:59pm.
+- The Intro to the `Tidyverse` Datacamp module is due Monday 2/24 at 11:59pm.
+- Lab #2 covering these `dplyr` functions and more is also due Monday 2/24 at 11:59pm.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -959,16 +960,74 @@ ncbreweries &lt;- ncbreweries %&gt;%
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -982,7 +1041,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

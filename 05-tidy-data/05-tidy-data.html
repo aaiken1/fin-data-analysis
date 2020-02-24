@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 5: Tidy Data</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -41,13 +41,13 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec5.r`. Add the data files to your **data** folder that lives in the course folder. Then, run the code below at the top of your R Script to get started. The script file needs to be in the same folder as your **data** folder
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec5.r`. Add the data files to your **data** folder that should live in the folder for this lecture. I have called mine `05-tidy-data`. Then, run the code below at the top of your R Script to get started. The script file should be saved in the folder for this lecture. 
 
 
 ```r
 library(tidyverse)
-pb &lt;- read_csv("data/low_relative_PB.csv")
-etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+pb &lt;- read_csv(here::here("05-tidy-data", "data", "low_relative_PB.csv"))
+etf &lt;- read_csv(here::here("05-tidy-data", "data", "etf-reproducible-finance.csv"))
 ```
 The first data set is a ready-made Factset screen that I ran. This screen finds companies that trade on U.S. exchanges that have a market cap &gt; $1B, have low P/CF, high interest coverage ratios, and are paying out FCF. These firm characteristics might be related to future returns. Note that these data are a **snapshot** in time.
 
@@ -80,14 +80,14 @@ You can answer these questions a variety of ways, some simple (e.g. correlation)
 ```
 ## Observations: 182
 ## Variables: 8
-## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT"…
-## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc…
-## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, …
-## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, …
-## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, …
-## $ industry        &lt;chr&gt; "Real Estate Investment Trusts", "Food: Major Di…
-## $ roe             &lt;chr&gt; "1.4", "11.6", "6.9", "9.9", "0.9", "16.5", "4.5…
-## $ roic            &lt;chr&gt; "0.9", "4.1", "3.4", "6.1", "0.8", "7.8", "2.2",…
+## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT", "RL…
+## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc.", "…
+## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, 10.48…
+## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, 0.59,…
+## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, 0.83,…
+## $ industry        &lt;chr&gt; "Real Estate Investment Trusts", "Food: Major Diversi…
+## $ roe             &lt;chr&gt; "1.4", "11.6", "6.9", "9.9", "0.9", "16.5", "4.5", "4…
+## $ roic            &lt;chr&gt; "0.9", "4.1", "3.4", "6.1", "0.8", "7.8", "2.2", "#N/…
 ```
 
 **I have not told you how any of these variables are calculated.** Of course, you should know the basic formulas (e.g. P/B and ROE). But, what were the details of the calculations? Over what time period was net income measured to get ROE? Which book value of equity was used for P/B? You should want to know this - don't take data for granted! Only in textbooks can you get away with not asking these questions.
@@ -175,14 +175,14 @@ glimpse(pb_clean)
 ```
 ## Observations: 182
 ## Variables: 8
-## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT"…
-## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc…
-## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, …
-## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, …
-## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, …
-## $ industry        &lt;fct&gt; Real Estate Investment Trusts, Food: Major Diver…
-## $ roe             &lt;dbl&gt; 1.4, 11.6, 6.9, 9.9, 0.9, 16.5, 4.5, 4.6, 9.3, 6…
-## $ roic            &lt;dbl&gt; 0.9, 4.1, 3.4, 6.1, 0.8, 7.8, 2.2, NA, 4.6, 4.1,…
+## $ symbol          &lt;chr&gt; "AMH", "BGS", "KMI", "PBA", "STAG", "UTX", "COT", "RL…
+## $ name            &lt;chr&gt; "American Homes 4 Rent Class A", "B&amp;G Foods, Inc.", "…
+## $ PricetoCashFlow &lt;dbl&gt; 14.36, 10.70, 6.55, 10.91, 13.92, 14.00, 12.75, 10.48…
+## $ PricetoSales    &lt;dbl&gt; 6.22, 1.06, 2.42, 2.94, 7.74, 1.33, 0.97, 2.11, 0.59,…
+## $ PricetoBook     &lt;dbl&gt; 1.23, 2.17, 1.03, 1.92, 1.81, 2.39, 1.83, 1.21, 0.83,…
+## $ industry        &lt;fct&gt; Real Estate Investment Trusts, Food: Major Diversifie…
+## $ roe             &lt;dbl&gt; 1.4, 11.6, 6.9, 9.9, 0.9, 16.5, 4.5, 4.6, 9.3, 6.5, 8…
+## $ roic            &lt;dbl&gt; 0.9, 4.1, 3.4, 6.1, 0.8, 7.8, 2.2, NA, 4.6, 4.1, 5.6,…
 ```
 
 Looking good! *industry* is now a factor and *roe* and *roic* are numeric with proper NA values. See Chapter 7.4 for a little more on NA or missing values. `is.na` is a very useful function.
@@ -251,11 +251,11 @@ You can use `ggplot` and/or `summarise`. You are looking for typical values, the
 ```r
 pb_clean %&gt;% 
   ggplot(aes(x = PricetoCashFlow)) + 
-  geom_histogram(binwidth = 1) + 
-  ggtitle("P/CF Distribution") + 
-  xlab("P/CF") + 
-  ylab("n") + 
-  theme_minimal()
+    geom_histogram(binwidth = 1) + 
+    ggtitle("P/CF Distribution") + 
+    xlab("P/CF") + 
+    ylab("n") + 
+    theme_minimal()
 ```
 
 &lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-11-1.png" width="50%" style="display: block; margin: auto;" /&gt;
@@ -381,7 +381,9 @@ But our data doesn't always look like this. Let's look at **Chapter 12** of our 
 
 Many of these notes come from [https://moderndive.com/4-tidy.html](https://moderndive.com/4-tidy.html), which is also covers the material found in our text.
 
-We are going to discuss **three important concepts**: gathering, spreading, and a little more on missing values.
+We are going to discuss **four important concepts**: pivoting, longer, wider, and a little more on missing values. See **Chapter 12.3** and **Chapter 12.5** for more. 
+
+**Pivoting, longer, and wider have recently replaced gather and spread in the `tidyverse`.** 
 
 ---
 # Some untidy stock data
@@ -449,10 +451,10 @@ stocks_tidy &lt;- stocks %&gt;%
     Amazon = `Amazon Stock Price`,
     Google = `Google Stock Price`
   ) %&gt;% 
-  gather(`Stock Name`, `Stock Price`, -Date)
+  pivot_longer(Boeing:Google, names_to = "firm", values_to = "price")
 ```
 
-The `stocks` data had 5 observations and 4 variables. The `stocks_tidy` data has 15 observations and 3 variables. Using the single quotes let's you have spaces in the variable names.
+The `stocks` data had 5 observations and 4 variables. The `stocks_tidy` data has 15 observations and 3 variables. Using the single quotes let's you have spaces in the variable names. We are renaming the longer name to just the firm.
 
 ---
 
@@ -534,9 +536,9 @@ Sometimes there are more than one identification variable. We sometimes talk abo
 Put your ID or key variables all the way to the left in your data.
 
 ---
-# Using `gather`
+# Using `pivot_longer`/`gather`
 
-Let's use our real ETF data now. This example is taken from Chapter 1 of [a new book on reproducible finance]([http://www.reproduciblefinance.com) written by Jonathan Regenstein, Jr. at RStudio. This book shows you how to perform the same tasks using three different sets of tools: `xts`, `tidyverse`, and `tidyquant`. We will use all three in our class.
+Let's use our real ETF data now. This example is similar to one from Chapter 1 of [a new book on reproducible finance]([http://www.reproduciblefinance.com) written by Jonathan Regenstein, Jr. at RStudio. This book shows you how to perform the same tasks using three different sets of tools: `xts`, `tidyverse`, and `tidyquant`. We will use all three in our class.
 
 Let's start with the `tidyverse`, since that's what we've been using. We've already imported our etf data from his website. Is it "tidy"?
 
@@ -548,65 +550,99 @@ glimpse(etf)
 ```
 ## Observations: 1,259
 ## Variables: 6
-## $ date &lt;date&gt; 2012-12-31, 2013-01-02, 2013-01-03, 2013-01-04, 2013-01-07…
-## $ SPY  &lt;dbl&gt; 128.3092, 131.5977, 131.3004, 131.8771, 131.5166, 131.1382,…
-## $ EFA  &lt;dbl&gt; 49.16410, 49.92501, 49.44080, 49.69155, 49.47539, 49.19869,…
-## $ IJS  &lt;dbl&gt; 75.06590, 77.12553, 77.02349, 77.62656, 77.17194, 76.87505,…
-## $ EEM  &lt;dbl&gt; 39.89233, 40.67489, 40.38705, 40.46800, 40.16218, 39.80238,…
-## $ AGG  &lt;dbl&gt; 98.19626, 98.08131, 97.83374, 97.93983, 97.88681, 97.97523,…
+## $ date &lt;date&gt; 2012-12-31, 2013-01-02, 2013-01-03, 2013-01-04, 2013-01-07, 201…
+## $ SPY  &lt;dbl&gt; 128.3092, 131.5977, 131.3004, 131.8771, 131.5166, 131.1382, 131.…
+## $ EFA  &lt;dbl&gt; 49.16410, 49.92501, 49.44080, 49.69155, 49.47539, 49.19869, 49.4…
+## $ IJS  &lt;dbl&gt; 75.06590, 77.12553, 77.02349, 77.62656, 77.17194, 76.87505, 77.0…
+## $ EEM  &lt;dbl&gt; 39.89233, 40.67489, 40.38705, 40.46800, 40.16218, 39.80238, 39.9…
+## $ AGG  &lt;dbl&gt; 98.19626, 98.08131, 97.83374, 97.93983, 97.88681, 97.97523, 97.9…
 ```
 
 
 What if we wanted to plot returns by date using `ggplot`. Could we with the data in this format? Not easily. How would you set `y = ticker`? "ticker" isn't a variable!
 ---
 
-# Using `gather` (cont.)
+# Using `pivot_longer`/`gather` (cont.)
 
-One thing to remember about `tibble`s and finance data: tibbles **do not** have to have a date column. As we'll see, other data objects used in finance, like `xts` objects, must have what is called a **date index**. A `tibble` is more generic and used for all types of data.
+One thing to remember about `tibbles` and finance data: tibbles **do not** have to have a date column. As we'll see, other data objects used in finance, like `xts` objects, must have what is called a **date index**. A `tibble` is more generic and used for all types of data.
 
-Let's do this in steps. First, let's get our price data into a tidy format using `gather`. Note that I need to save the work somewhere in the global environment. I am calling the new `tibble` etf_returns.
+Let's do this in steps. First, let's get our price data into a tidy format using `pivot_longer`. Note that I need to save the work somewhere in the global environment. I am calling the new `tibble` etf_returns_longer.
+
+I am piping the tibble to pivot_longer(), just as with `ggplot2`, so we don't need a `data = ` argument.
 
 
 ```r
-etf_returns &lt;- etf %&gt;% 
-  gather(key = asset, value = prices, -date) 
+etf_returns_longer &lt;- etf %&gt;% 
+  pivot_longer(cols = SPY:AGG, names_to = "ticker", values_to = "prices") 
 ```
 
 ---
-# Using `gather` (cont.)
 
-The `gather` function in the tidyr package can complete this task for us. I am piping the tibble to gather(), just as with `ggplot2`, so we don't need a `data = ` argument. The **key** argument is the name of the valus that form the columns (asset) and **value** is the variable that is spread over the cells (prices). Lastly, we include a specification for variables we’d like to NOT include in this tidying process using a -. 
+# Using `pivot_longer`/`gather` (cont.)
+
+What did `pivot_longer` do? The first argument, `cols` has the columns that are going to "go away". These columns, or names, go into a new variable created by the second argument, `names_to`. In this case each ticker becomes a value in a new column called ticker. Finally, what about the prices that were under the ticker-based column headers in the original data? These go into a new variable called `price`.
+
+
+```r
+etf_returns_longer &lt;- etf %&gt;% 
+  pivot_longer(cols = SPY:AGG, names_to = "ticker", values_to = "prices") 
+```
+
+
+---
+
+# Using `pivot_longer`/`gather` (cont.)
+
+We can also get our data into the proper, tidy format using the older `gather`. I am showing you both ways, as older material will use `gather`.
+
+
+```r
+etf_returns_gather &lt;- etf %&gt;% 
+  gather(key = asset, value = prices, -date) 
+```
+
+
+---
+# Using `pivot_longer`/`gather` (cont.)
+
+The **key** argument is the name of the values that form the columns (asset) and **value** is the variable that is spread over the cells (prices). Lastly, we include a specification for variables we’d like to NOT include in this tidying process using a -. 
 
 You could include variables by just listing them (see the text).
 
 Note that you **do not** need to include `key = ` or `value = `. I've done so for readability and suggest that you do too until you get the hang of things.
 
+
+```r
+etf_returns_gather &lt;- etf %&gt;% 
+  gather(key = asset, value = prices, -date) 
+```
+
 ---
-# Using `gather` (cont.)
+# Using `pivot_longer`/`gather` (cont.)
 
 Three variables, where `asset` now designates the name of the security. This will let use use `group_by` to calculate returns.
 
 
 ```r
-glimpse(etf_returns)
+glimpse(etf_returns_longer)
 ```
 
 ```
 ## Observations: 6,295
 ## Variables: 3
-## $ date   &lt;date&gt; 2012-12-31, 2013-01-02, 2013-01-03, 2013-01-04, 2013-01-…
-## $ asset  &lt;chr&gt; "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "SPY", "…
-## $ prices &lt;dbl&gt; 128.3092, 131.5977, 131.3004, 131.8771, 131.5166, 131.138…
+## $ date   &lt;date&gt; 2012-12-31, 2012-12-31, 2012-12-31, 2012-12-31, 2012-12-31, 2…
+## $ ticker &lt;chr&gt; "SPY", "EFA", "IJS", "EEM", "AGG", "SPY", "EFA", "IJS", "EEM",…
+## $ prices &lt;dbl&gt; 128.30916, 49.16410, 75.06590, 39.89233, 98.19626, 131.59770, …
 ```
 
 ---
 # Calculating returns
-Let's `group_by` asset and use `mutate` to calculate log returns. Note that `lag` function. We can then drop the price variable, since we don't need it anymore.
+Let's `group_by` ticker and use `mutate` to calculate log returns. Note that `lag` function. We can then drop the price variable, since we don't need it anymore.
 
 
 ```r
-etf_returns &lt;- etf_returns %&gt;%
-  group_by(asset) %&gt;% 
+etf_returns_longer &lt;- etf_returns_longer %&gt;%
+  group_by(ticker) %&gt;% 
   mutate(returns = (log(prices) - log(lag(prices)))) %&gt;% 
   select(-prices)
 ```
@@ -617,8 +653,8 @@ Oh no! What went wrong? Note that the `kable` function just makes a nicer lookin
 
 
 ```r
-etf_returns %&gt;% 
-  group_by(asset) %&gt;% 
+etf_returns_longer %&gt;% 
+  group_by(ticker) %&gt;% 
   summarise(
     mean = mean(returns),
     stdev = sd(returns)
@@ -629,7 +665,7 @@ etf_returns %&gt;%
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; asset &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; ticker &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; stdev &lt;/th&gt;
   &lt;/tr&gt;
@@ -669,17 +705,18 @@ We forgot to remove the missing values. Remember, you we calculate returns from 
 
 
 ```r
-etf_returns %&gt;% group_by(asset) %&gt;% 
+etf_returns_longer %&gt;% group_by(ticker) %&gt;% 
   summarise(
     mean = mean(returns, na.rm = TRUE),
     stdev = sd(returns, na.rm = TRUE)
-  ) %&gt;% kable(format='html')
+  ) %&gt;% 
+  kable(format='html')
 ```
 
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; asset &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; ticker &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; stdev &lt;/th&gt;
   &lt;/tr&gt;
@@ -715,25 +752,50 @@ etf_returns %&gt;% group_by(asset) %&gt;%
 
 
 ---
-# Using `spread` to go back
-Spreading is the opposite of gathering. You use it when an observation is scattered across multiple rows. In this case, some financial packages in R want the data in our original format (i.e. where every column is the ID for the stock, like a ticker).
+# Using `pivot_wider`/`spread` to go back
+`Pivot_wider`, or the older `spread` is the opposite of gathering. You use it when an observation is scattered across multiple rows. In this case, some financial packages in R want the data in our original format (i.e. where every column is the ID for the stock, like a ticker).
 
 
 ```r
-etf_returns_spread &lt;- etf_returns %&gt;%
-  spread(key = asset, value = returns)
+etf_returns_wider &lt;- etf_returns_longer %&gt;%
+  pivot_wider(names_from = ticker, values_from = returns)
+
+head(etf_returns_wider, 3)
+```
+
+```
+## # A tibble: 3 x 6
+##   date            SPY      EFA      IJS      EEM      AGG
+##   &lt;date&gt;        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 2012-12-31 NA       NA       NA       NA       NA      
+## 2 2013-01-02  0.0253   0.0154   0.0271   0.0194  -0.00117
+## 3 2013-01-03 -0.00226 -0.00975 -0.00132 -0.00710 -0.00253
+```
+
+
+---
+# Using `pivot_wider`/`spread` to go back
+Here's the same example, but using `spread`. Again, if you look online, you're likely to see `spread` examples, since pivot_wider just came out a few months ago.
+
+
+```r
+etf_returns_spread &lt;- etf_returns_longer %&gt;%
+  spread(key = ticker, value = returns)
 
 head(etf_returns_spread, 3)
 ```
 
 ```
 ## # A tibble: 3 x 6
-##   date             AGG       EEM       EFA       IJS       SPY
-##   &lt;date&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-## 1 2012-12-31  NA        NA        NA        NA        NA      
-## 2 2013-01-02  -0.00117   0.0194    0.0154    0.0271    0.0253 
-## 3 2013-01-03  -0.00253  -0.00710  -0.00975  -0.00132  -0.00226
+##   date            AGG      EEM      EFA      IJS      SPY
+##   &lt;date&gt;        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 2012-12-31 NA       NA       NA       NA       NA      
+## 2 2013-01-02 -0.00117  0.0194   0.0154   0.0271   0.0253 
+## 3 2013-01-03 -0.00253 -0.00710 -0.00975 -0.00132 -0.00226
 ```
+
+
+
 ---
 # Cleaning things up
 
@@ -750,11 +812,11 @@ head(etf_returns_spread, 3)
 
 ```
 ## # A tibble: 3 x 6
-##   date             SPY       EFA       IJS       EEM       AGG
-##   &lt;date&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-## 1 2012-12-31  NA        NA        NA        NA        NA      
-## 2 2013-01-02   0.0253    0.0154    0.0271    0.0194   -0.00117
-## 3 2013-01-03  -0.00226  -0.00975  -0.00132  -0.00710  -0.00253
+##   date            SPY      EFA      IJS      EEM      AGG
+##   &lt;date&gt;        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 2012-12-31 NA       NA       NA       NA       NA      
+## 2 2013-01-02  0.0253   0.0154   0.0271   0.0194  -0.00117
+## 3 2013-01-03 -0.00226 -0.00975 -0.00132 -0.00710 -0.00253
 ```
 
 ---
@@ -789,17 +851,13 @@ We can take our "long" data and create overlapping histograms of returns. What's
 
 
 ```r
-etf_returns %&gt;% 
-  ggplot(aes(x = returns, fill = asset)) + 
+etf_returns_longer %&gt;% 
+  ggplot(aes(x = returns, fill = ticker)) + 
   geom_histogram(alpha = 0.45, binwidth = .005) + 
   ggtitle("Monthly Returns")
 ```
 
-```
-## Warning: Removed 5 rows containing non-finite values (stat_bin).
-```
-
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-28-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-32-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
@@ -808,49 +866,36 @@ I'm not sure that was very informative. Let's try a `facet_wrap`. We can change 
 
 
 ```r
-etf_returns %&gt;% 
-  ggplot(aes(x = returns, fill = asset)) + 
-  geom_histogram(alpha = 0.45, binwidth = .01) + 
-  facet_wrap(~ asset) +
-  ggtitle("Monthly Returns") + 
-  theme_update(plot.title = element_text(hjust = 0.5))
+etf_returns_longer %&gt;% 
+  ggplot(aes(x = returns, fill = ticker)) + 
+    geom_histogram(alpha = 0.45, binwidth = .01) + 
+    facet_wrap(~ ticker) +
+    ggtitle("Monthly Returns") + 
+    theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
-```
-## Warning: Removed 5 rows containing non-finite values (stat_bin).
-```
-
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-29-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-33-1.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
 
-
-```
-## Warning: Removed 5 rows containing non-finite values (stat_bin).
-```
-
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-30-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-34-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 
 ---
 # A few visualizations using `ggplot`
 
 
 ```r
-etf_returns %&gt;% 
-  ggplot(aes(x = returns, color = asset)) + 
-  geom_density(alpha = 1) + 
-  ggtitle("Monthly Returns Density Plot") + 
-  xlab("monthly returns") + 
-  ylab("count") + 
-  theme_minimal()
+etf_returns_longer %&gt;% 
+  ggplot(aes(x = returns, color = ticker)) + 
+    geom_density(alpha = 1) + 
+    ggtitle("Monthly Returns Density Plot") + 
+    xlab("monthly returns") + 
+    ylab("count") + 
+    theme_minimal()
 ```
 
-```
-## Warning: Removed 5 rows containing non-finite values (stat_density).
-```
-
-&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-31-1.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="05-tidy-data_files/figure-html/unnamed-chunk-35-1.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 
 
@@ -858,8 +903,13 @@ etf_returns %&gt;%
 
 # For next class...
 
-- You will work on Lab #3, in which you tell me a story about housing in Kansas City
+- You will work on Lab #3, in which you tell me a **story** about housing in Kansas City.
+- What do I mean by a story? A single narrative about the housing market with supporting data and visualizations.
+- We are doing **exploratory** or descriptive statistics. So, no need to worry about causation. 
+  - For example, does density cause higher prices? Or, do higher prices cause density? Causal stories are hard to get and require an entirely different set of tools.
+  - Econometrics deals with this.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -869,16 +919,74 @@ etf_returns %&gt;%
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -892,7 +1000,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="" xml:lang="">
   <head>
     <title>Lecture 6: Dates in R</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -41,7 +41,7 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec6.r`. Add the data files to your **data** folder that lives in the course folder. Then, run the code below at the top of your R Script to get started. The script file needs to be in the same folder as your **data** folder
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec6.r`. Add the data files to your **data** folder that lives in the folder for this lecture and run the code below at the top of your R Script to get started. The script file needs to be in the same folder as your **data** folder
 
 
 ```r
@@ -49,8 +49,9 @@ library(tidyverse)
 library(lubridate)
 library(nycflights13)
 library(xts)
-etf &lt;- read_csv("data/etf-reproducible-finance.csv")
-ffdaily &lt;- read_csv("data/ffdaily.csv")
+library(here)
+etf &lt;- read_csv(here::here("06-dates", "data", "etf-reproducible-finance.csv"))
+ffdaily &lt;- read_csv(here::here("06-dates", "data", "ffdaily.csv"))
 ```
 We are going to use the ETF price data again. We'll also use the NYC flights data from our textbook for a few examples. Finally, let's import some Fama-French daily factor returns.
 
@@ -73,7 +74,7 @@ today
 ```
 
 ```
-## [1] "2019-03-03"
+## [1] "2020-03-02"
 ```
 
 ```r
@@ -83,6 +84,7 @@ class(today)
 ```
 ## [1] "Date"
 ```
+
 We are looking at a Base R "date" class here. In objective oriented languages, a **class** is the "blueprint" for the **object**. So, the class has certain characteristics, things that we can do with it, etc. The object is the **instance** of the class. 
 
 Along with the date class, Base R also has the POSIX class, which lets you store information about dates, times, and time zones.  
@@ -118,6 +120,7 @@ class(my_birthday)
 ```
 ## [1] "Date"
 ```
+
 ---
 
 # Date formats
@@ -125,20 +128,20 @@ class(my_birthday)
 
 ```r
 # This works: year-month-date
-as.Date("2019-03-04")
+as.Date("2020-03-03")
 ```
 
 ```
-## [1] "2019-03-04"
+## [1] "2020-03-03"
 ```
 
 ```r
 # This works: year/month/date
-as.Date("2019/03/04")
+as.Date("2020/03/03")
 ```
 
 ```
-## [1] "2019-03-04"
+## [1] "2020-03-03"
 ```
 
 ```r
@@ -146,11 +149,11 @@ as.Date("2019/03/04")
 # as.Date("03/04/2019")
 
 # You can tell R the format.
-as.Date("03/04/2019", format = "%m/%d/%Y")
+as.Date("03/03/2020", format = "%m/%d/%Y")
 ```
 
 ```
-## [1] "2019-03-04"
+## [1] "2020-03-03"
 ```
 
 ```r
@@ -179,7 +182,7 @@ lubridate::today()
 ```
 
 ```
-## [1] "2019-03-03"
+## [1] "2020-03-02"
 ```
 
 ```r
@@ -187,7 +190,7 @@ lubridate::now()
 ```
 
 ```
-## [1] "2019-03-03 12:54:03 EST"
+## [1] "2020-03-02 10:51:38 EST"
 ```
 
 I am using the `lubridate::` format just to remind you where these functions are coming from. You can just run `today()` and `now()`. You need those parentheses. 
@@ -200,35 +203,35 @@ As we've seen, a lot of times your dates will be in string or character format. 
 
 
 ```r
-ymd("2019-03-04")
+ymd("2020-03-02")
 ```
 
 ```
-## [1] "2019-03-04"
-```
-
-```r
-mdy("March 4th, 2019")
-```
-
-```
-## [1] "2019-03-04"
+## [1] "2020-03-02"
 ```
 
 ```r
-dmy("04-Mar-2019")
+mdy("March 3rd, 2020")
 ```
 
 ```
-## [1] "2019-03-04"
+## [1] "2020-03-03"
 ```
 
 ```r
-ymd(20190304)
+dmy("03-Mar-2020")
 ```
 
 ```
-## [1] "2019-03-04"
+## [1] "2020-03-03"
+```
+
+```r
+ymd(20200303)
+```
+
+```
+## [1] "2020-03-03"
 ```
 
 ---
@@ -258,6 +261,7 @@ flights %&gt;%
 ## 10  2013     1     1     6      0
 ## # … with 336,766 more rows
 ```
+
 ---
 # Dates from components (cont.)
 
@@ -304,14 +308,14 @@ flights %&gt;%
 ```
 ## Observations: 336,776
 ## Variables: 8
-## $ year           &lt;int&gt; 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2…
-## $ month          &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-## $ day            &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-## $ dep_time       &lt;int&gt; 517, 533, 542, 544, 554, 554, 555, 557, 557, 558,…
-## $ sched_dep_time &lt;int&gt; 515, 529, 540, 545, 600, 558, 600, 600, 600, 600,…
-## $ arr_time       &lt;int&gt; 830, 850, 923, 1004, 812, 740, 913, 709, 838, 753…
-## $ sched_arr_time &lt;int&gt; 819, 830, 850, 1022, 837, 728, 854, 723, 846, 745…
-## $ arr_delay      &lt;dbl&gt; 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3,…
+## $ year           &lt;int&gt; 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, …
+## $ month          &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ day            &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ dep_time       &lt;int&gt; 517, 533, 542, 544, 554, 554, 555, 557, 557, 558, 558,…
+## $ sched_dep_time &lt;int&gt; 515, 529, 540, 545, 600, 558, 600, 600, 600, 600, 600,…
+## $ arr_time       &lt;int&gt; 830, 850, 923, 1004, 812, 740, 913, 709, 838, 753, 849…
+## $ sched_arr_time &lt;int&gt; 819, 830, 850, 1022, 837, 728, 854, 723, 846, 745, 851…
+## $ arr_delay      &lt;dbl&gt; 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3, 7, -…
 ```
 
 ---
@@ -359,15 +363,15 @@ glimpse(flights_dt)
 ```
 ## Observations: 328,063
 ## Variables: 9
-## $ origin         &lt;chr&gt; "EWR", "LGA", "JFK", "JFK", "LGA", "EWR", "EWR", …
-## $ dest           &lt;chr&gt; "IAH", "IAH", "MIA", "BQN", "ATL", "ORD", "FLL", …
-## $ dep_delay      &lt;dbl&gt; 2, 4, 2, -1, -6, -4, -5, -3, -3, -2, -2, -2, -2, …
-## $ arr_delay      &lt;dbl&gt; 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3,…
-## $ dep_time       &lt;dttm&gt; 2013-01-01 05:17:00, 2013-01-01 05:33:00, 2013-0…
-## $ sched_dep_time &lt;dttm&gt; 2013-01-01 05:15:00, 2013-01-01 05:29:00, 2013-0…
-## $ arr_time       &lt;dttm&gt; 2013-01-01 08:30:00, 2013-01-01 08:50:00, 2013-0…
-## $ sched_arr_time &lt;dttm&gt; 2013-01-01 08:19:00, 2013-01-01 08:30:00, 2013-0…
-## $ air_time       &lt;dbl&gt; 227, 227, 160, 183, 116, 150, 158, 53, 140, 138, …
+## $ origin         &lt;chr&gt; "EWR", "LGA", "JFK", "JFK", "LGA", "EWR", "EWR", "LGA"…
+## $ dest           &lt;chr&gt; "IAH", "IAH", "MIA", "BQN", "ATL", "ORD", "FLL", "IAD"…
+## $ dep_delay      &lt;dbl&gt; 2, 4, 2, -1, -6, -4, -5, -3, -3, -2, -2, -2, -2, -2, -…
+## $ arr_delay      &lt;dbl&gt; 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3, 7, -…
+## $ dep_time       &lt;dttm&gt; 2013-01-01 05:17:00, 2013-01-01 05:33:00, 2013-01-01 …
+## $ sched_dep_time &lt;dttm&gt; 2013-01-01 05:15:00, 2013-01-01 05:29:00, 2013-01-01 …
+## $ arr_time       &lt;dttm&gt; 2013-01-01 08:30:00, 2013-01-01 08:50:00, 2013-01-01 …
+## $ sched_arr_time &lt;dttm&gt; 2013-01-01 08:19:00, 2013-01-01 08:30:00, 2013-01-01 …
+## $ air_time       &lt;dbl&gt; 227, 227, 160, 183, 116, 150, 158, 53, 140, 138, 149, …
 ```
 
 ---
@@ -468,12 +472,12 @@ head(my_timeseries,5)
 ```
 
 ```
-##                  [,1]
-## 2018-01-01  1.3543098
-## 2018-01-02 -1.3998961
-## 2018-01-03 -0.4064346
-## 2018-01-04  0.1900680
-## 2018-01-05  0.7649365
+##                    [,1]
+## 2018-01-01  0.009855648
+## 2018-01-02 -0.173504892
+## 2018-01-03  0.640683456
+## 2018-01-04  0.654336478
+## 2018-01-05 -0.435672485
 ```
 
 ---
@@ -538,8 +542,9 @@ class(ffdaily_xts)
 - You will work on Lab #4.
 - We are going to turn to some more "computer science"-like topics next. These means writing our own functions, loops, and vectorization. These are also lightly covered in the **Intermediate R for Finance** DataCamp module.
 - Make sure that you are reading along in our textbook. We aren't covering every part of every chapter, but there are tools in the book that will help you out later on.
-- The **Intermediate R for Finance** DataCamp module is due Monday 3/18 at midnight.
+- The **Intermediate R for Finance** DataCamp module is due Monday 3/9.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -549,16 +554,74 @@ class(ffdaily_xts)
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -572,7 +635,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

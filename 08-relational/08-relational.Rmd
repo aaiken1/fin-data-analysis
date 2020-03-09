@@ -1,0 +1,196 @@
+---
+title: "Lecture 8: Joining Data Sets"
+subtitle: "<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: Adam Aiken | Elon University
+date: FIN 469 #"`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts] 
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, center, middle
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(knitr)
+opts_chunk$set(
+  fig.align="center",  
+  fig.height=4, #fig.width=6,
+  # out.width="748px", #out.length="520.75px",
+  dpi=300, #fig.path='Figs/',
+  cache=T#, echo=F, warning=F, message=F
+  )
+
+library(tidyverse)
+#library(hrbrthemes)
+library(magick)
+library(usethis)
+use_git_config(user.name = "Adam Aiken", user.email = "adam.aiken@gmail.com")
+```
+
+```{css, echo=F}
+.code-small .remark-code, .remark-inline-code { font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+                                    font-size: 50%;
+                                  }
+```
+# Joining (or merging) two files
+(What if your data is in two places?)
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>
+
+---
+# Getting setup
+
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec08.r`. We will be dealing with two different CSV files today. Each has information on a non-overlapping set of stocks. 
+
+```{r set-up, eval=TRUE , message=FALSE}
+library(tidyverse)
+library(lubridate)
+stock1 <- read_csv("data/stock1.csv")
+stock2 <- read_csv("data/stock2.csv")
+```
+
+[Chapter 13](https://r4ds.had.co.nz/relational-data.html) of our textbook covers some of the details about joining data sets together. 
+
+---
+# Joining operations
+
+One of the mainstays of the dplyr package is merging data with the family [join operations](https://cran.r-project.org/web/packages/dplyr/vignettes/two-table.html).
+- `left_join(df1, df2)`
+- `inner_join(df1, df2)`
+- `right_join(df1, df2)`
+- `full_join(df1, df2)`
+- `semi_join(df1, df2)`
+- `anti_join(df1, df2)`
+
+We are going to use our two stock data sets to learn about how to **join/merge data sets**. The two stocks files contain overlapping, but not identical stocks. One CSV file has valuation measures, while the other contains additional metrics. *gvkey* is the stock ID (like a ticker, but better).
+
+--
+
+*adate* and *qdate* refers to the year-end date and quarter-end date for which the variables were used for calculating the related financial ratios. The public_date is roughly when this information becomes publicly available. 
+
+
+---
+# Our data
+
+```{r}
+glimpse(stock1)
+```
+
+See any issues?
+
+```{r}
+stock1 <- stock1 %>%
+  rename_all(tolower)  %>%
+  mutate(adate = ymd(adate),
+         qdate = ymd(qdate),
+         public_date = ymd(public_date),
+         divyield = as.numeric(str_remove(divyield,"%"))/100
+         )
+```
+
+---
+# Our data (cont.)
+
+```{r}
+glimpse(stock1)
+```
+
+---
+# Our data (cont.)
+
+```{r}
+glimpse(stock2)
+```
+
+See any issues?
+
+```{r}
+stock2 <- stock2 %>%
+  rename_all(tolower)  %>% #Something cool to remember!
+  mutate(adate = ymd(adate),
+         qdate = ymd(qdate),
+         public_date = ymd(public_date))
+```
+
+---
+
+# Left join example
+
+Let's perform a [left join](https://stat545.com/bit001_dplyr-cheatsheet.html#left_joinsuperheroes-publishers) on our two stock databases. A left join will keep all observations in the "left" data, but then bring in any **matching** observations from the "right" data. All columns from both are kept. I'm going to `select` certain columns, just to make things fit on the slide.
+--
+
+```{r join1}
+left_join(stock1, stock2) %>%
+  select(gvkey, public_date, roe, bm, divyield) %>%
+  head(5)
+```
+
+---
+
+# Left join example (cont.)
+
+Note that `dplyr` made a reasonable guess about which columns to join on (i.e. columns that share the same name). It also told us its choices: 
+
+```
+*Joining, by = c("gvkey", "adate", "qdate", "public_date")
+```
+
+But, what if we want to tell `dplyr` what to do? Make sure you know what "adate.x" and "adate.y" are. Again, it pays to be specific.
+
+
+```{r join2}
+join_stock <- left_join(stock1, stock2, by = c("gvkey" = "gvkey", 
+                                               "public_date" = "public_date"))
+head(join_stock, 3)
+```
+
+
+---
+# Left join example (cont.)
+
+Let's look at the data and see what happened.
+
+- *adate* and *qdate* were in both data sets. So, R brought them both in, but gave them a .y or .x ending, so that we would know where they came from. .x comes from the first data set, .y from the second.
+- *divyield* got set to N/A, that's good
+- stock1 data did not contain gvkey = 1690 from stock2 data. Not in joined data, because this was a `left_join`.
+- stock1 data contains gvkey = 114628 and gvkey = 147579, but stock2 data does not. Both are still in the data set, but with missing values for columns from stock2 data.
+
+--
+
+Always double-check your data. Merging is where so many problems can occur!
+
+---
+# Inner join example
+
+An `inner_join` will only keep the observations that are in **both** data sets.
+
+```{r}
+inner_join(stock1, stock2, by = c("gvkey" = "gvkey", 
+                                  "public_date" = "public_date")) %>%
+  distinct(gvkey) #Something cool to remember!
+```
+
+---
+# Inner join example (cont.)
+
+Compare the `inner_join` to the `left_join. 6 distinct *gvkey* values vs. 8 with the inner_join. Always keep track of your number of observations, number of variables, what your ID variables are, how many distinct values you have, etc. Check counts **after every merge**.
+
+```{r}
+left_join(stock1, stock2, by = c("gvkey" = "gvkey", 
+                                 "public_date" = "public_date")) %>%
+  distinct(gvkey)
+```
+
+
+---
+
+# For next class...
+
+- You will work on Lab #5.
+- The **Intermediate R for Finance** DataCamp module is due Monday 3/18 at midnight.
+- Midterm take-home exam is next week. More details to follow.

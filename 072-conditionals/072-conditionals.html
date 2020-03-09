@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 7-2: Conditionals and Iteration</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -41,7 +41,7 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec72.r`. No data for this lecture - we will create our own where needed.
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec72.r` in a folder called `lec72`. No data for this lecture - we will create our own where needed.
 
 
 ```r
@@ -101,7 +101,7 @@ acs2
 
 # Spacing
 
-- Put a space before and after all infix operators (=, +, -, &lt;-, etc.), and when naming arguments in function calls. 
+- Put a space before and after operators (=, +, -, &lt;-, etc.), and when naming arguments in function calls. 
 - Always put a space after a comma, and never before (just like in regular English).
 
 
@@ -184,7 +184,7 @@ if(random &gt; 0) {
 ```
 
 ```
-## [1] "-0.451806226868241" "is pretty small"
+## [1] "-0.179761073523467" "is pretty small"
 ```
 
 From DataCamp, you may have noticed that `IF` + `subset()` is basically a `ddplyr::filter`. `ddplyr` has there own IF statements, such as `if_else`. These are easy to use as part of a %&gt;%.
@@ -216,7 +216,7 @@ a
 ## [1] 0.50988
 ```
 
-DataCamp covers `repeate` and `while` loops. Looping over a list can be helpful.
+DataCamp covers `repeat` and `while` loops. Looping over a list can be helpful.
 
 ---
 class: inverse, center, middle
@@ -226,11 +226,11 @@ class: inverse, center, middle
 
 ---
 # The purrr package
-`For` loops are not as important in R as they are in other languages because R is a functional programming language. This means that it’s possible to wrap up for loops in a function, and call that function instead of using the for loop directly.
+`For` loops are not as important in R as they are in other languages because R is a functional programming language. This means that it’s possible to wrap up FOR loops in a function, and call that function instead of using the FOR loop directly.
 
 Let's start with the `map` functions from the `purrr` package. This is the `tidy` way to avoid looping. In the DataCamp lectures, they cover the older, but still used, `apply` family of functions.
 
-The goal of using `purrr` functions instead of for loops is to allow you break common list manipulation challenges into independent pieces:
+The goal of using `purrr` functions instead of FOR loops is to allow you break common list manipulation challenges into independent pieces:
 
 1. How can you solve the problem for a single element of the list? Once you’ve solved that problem, `purrr` takes care of generalising your solution to every element in the list.
 
@@ -372,9 +372,9 @@ These are covered a little bit in the **Intermediate R for Finance** DataCamp. I
 apply(X, MARGIN, FUN)
 - x: a data frame or matrix
 - MARGIN:  take a value or range between 1 and 2 to define where to apply the function
-  - MARGIN=1: the manipulation is performed on rows
-  - MARGIN=2: the manipulation is performed on columns
-  - MARGIN=c(1,2) the manipulation is performed on rows and columns
+  - MARGIN = 1: the manipulation is performed on rows
+  - MARGIN = 2: the manipulation is performed on columns
+  - MARGIN = c(1,2) the manipulation is performed on rows and columns
 - FUN: tells which function to apply. Built-in functions like mean, median, sum, min, max and even user-defined functions can be applied.
 
 ---
@@ -413,7 +413,7 @@ Let's try `lapply`. This one returns a `list` and doesn't need the `margin`. It 
 
 
 ```r
-tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
+tickers &lt;- c("AAPL", "NFLX", "MSFT", "IBM")
 tickers_lower &lt;- lapply(tickers, tolower)
 glimpse(tickers_lower)
 ```
@@ -433,7 +433,7 @@ Let's try `sapply`. This one returns a `vector` and also doesn't need the `margi
 
 
 ```r
-tickers &lt;- c("AAPL","NFLX","MSFT","IBM")
+tickers &lt;- c("AAPL", "NFLX", "MSFT", "IBM")
 tickers_lower &lt;- sapply(tickers, tolower)
 glimpse(tickers_lower) 
 ```
@@ -448,13 +448,9 @@ glimpse(tickers_lower)
 
 You can do a lot more with these ideas, but they quickly go beyond the scope of this semester. This important point: **remember that they exist, as you may see them used when you look for help online.** Why use them? If you find your self repeating code.
 
-But, correct code &gt;&gt;&gt; efficient code at this point. 
-
-### For next class...
-- You will work on Lab #5.
-- The **Intermediate R for Finance** DataCamp module is due Monday 3/18 at midnight.
-- More mid-term exam is next week. More details to follow.
+But, correct code &gt;&gt;&gt; efficient code at this point.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -464,16 +460,74 @@ But, correct code &gt;&gt;&gt; efficient code at this point.
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -487,7 +541,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

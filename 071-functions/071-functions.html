@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 7-1: Writing Functions in R</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -41,14 +41,14 @@ class: inverse, center, middle
 ---
 # Getting setup
 
-Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script `Lec71.r`. No data for this lecture - we will create our own where needed.
+Open up your R Project for this class. You can do this under File:Open Project or in the upper right corner of RStudio. Then, do New File:RScript. Note that there is a keyboard shortcut. You can save this script as `Lec71.r` in a folder called `lec71`. No data for this lecture - we will create our own where needed.
 
 
 ```r
 library(tidyverse)
 ```
 
-You will also see a little bit about functions in the **Intermediate R for Finance** DataCamp module. [Chapter 19](https://r4ds.had.co.nz/functions.html) of our textbook covers writing your own functions. Definitely more than we are going to cover.
+You will also see a little bit about functions in the **Intermediate R for Finance** DataCamp module. [Chapter 19](https://r4ds.had.co.nz/functions.html) of our textbook covers writing your own functions. Definitely more than we are going to do.
 
 ---
 # Why functions?
@@ -205,7 +205,7 @@ mean_ci(my_data$value, 0.95)
 ```
 
 ```
-## [1] -0.08395939  0.03707127
+## [1] -0.06396187  0.06308765
 ```
 
 ```r
@@ -245,11 +245,10 @@ pnorm(-1.959964) #What percent of my data lies to the left of -1.96?
 
 # For next class...
 
-- You will work on Lab #4.
 - We are going to turn to some more "computer science"-like topics next. These means writing our own functions, loops, and vectorization. These are also lightly covered in the **Intermediate R for Finance** DataCamp module.
 - Make sure that you are reading along in our textbook. We aren't covering every part of every chapter, but there are tools in the book that will help you out later on.
-- The **Intermediate R for Finance** DataCamp module is due Monday 3/18 at midnight.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -259,16 +258,74 @@ pnorm(-1.959964) #What percent of my data lies to the left of -1.96?
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -282,7 +339,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

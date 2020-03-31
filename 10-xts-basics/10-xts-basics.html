@@ -427,6 +427,7 @@ head(wti_price_usd, 3)
 
 `tq_transmute` is a powerful way to manipulate financial data. Here, we are taking the FANG data built-in to the `tidyquant` package, taking the adjusted close, and picking the last close of each month. Note that `transmute` drops everything but the columns used as part of the transmute. In this case, we are doing a `group_by(symbol)`, so the tickers are kept in the data. Do you see what `group_by()` does when used with `slice()`?
 
+.code-small[
 
 ```r
 FANG %&gt;%
@@ -449,11 +450,12 @@ FANG %&gt;%
 ## 7 NFLX   2013-01-31     23.6
 ## 8 NFLX   2013-02-28     26.9
 ```
+]
 
 ---
 # Using tq_mutate
 
-`tq_mutate` will create a new variable and keep the existing ones in the tibble. There are many different built-in mutate functions. In this case, let's create a [MACD indicator](https://www.investopedia.com/terms/m/macd.asp) using the closing price. We can then rename the column from "MACD" to "Signal". I'm "slicing" the last row for each stock.
+`tq_mutate` will create a new variable and keep the existing ones in the tibble. There are many different built-in mutate functions. In this case, let's create a [MACD indicator](https://www.investopedia.com/terms/m/macd.asp) using the closing price. We can then rename the columns created to "MACD" and "Signal". I'm "slicing" the last row for each stock.
 
 
 ```r
@@ -701,6 +703,7 @@ sp500_vix_rolling_vol %&gt;%
 
 Finally, we can run a quick regression to formally test if the VIX is related to past realized volatility. We saw the relationship in the previous graph.
 
+.code-small[
 
 ```r
 reg &lt;- lm(vix ~ sp500_roll_20_annualized, data = sp500_vix_rolling_vol)
@@ -727,6 +730,7 @@ summary(reg)
 ## Multiple R-squared:  0.7848,	Adjusted R-squared:  0.7848 
 ## F-statistic: 2.771e+04 on 1 and 7598 DF,  p-value: &lt; 2.2e-16
 ```
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

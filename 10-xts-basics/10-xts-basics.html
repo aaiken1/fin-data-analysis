@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
-    <title>Lecture 10: xts and time series</title>
-    <meta charset="utf-8">
+    <title>Lecture 10: xts, time series, and tidyquant</title>
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -12,7 +12,7 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Lecture 10: xts and time series
+# Lecture 10: xts, time series, and tidyquant
 ## <html>
 <div style="float:left">
 
@@ -35,7 +35,6 @@ class: inverse, center, middle
                                   }
 &lt;/style&gt;
 # The xts package
-(xts, zoo, time series and tidyquant!)
 &lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
 
 ---
@@ -49,11 +48,14 @@ library(tidyverse)
 library(xts)
 library(tidyquant)
 library(PerformanceAnalytics)
+library(here)
+library(RcppRoll)
+library(janitor)
 ```
 
-- We are going to talk about the `xts` package today. This is a very popular "old school" R package for handling time series data (e.g. stock prices and returns). It is also the subject of your **next DataCamp module, due April 8th**. 
+- We are going to start with the `xts` package today. This is a very popular "old school" R package for handling **time series data** (e.g. stock prices and returns). It is also the subject of your **a DataCamp module that we are doing**. 
 
-- `xts` is also part of the `tidyquant` package. This means that we can use the `xts` functions, but as part of a `tidyquant` function. This let's us do old school R finance stuff, but with a `tidy` flavor. So why learn the traditional way? `tidyquant` is very new and most of finance R still uses traditional `xts`.
+- We will then turn to a `tidayquant` example. `xts` is also part of the `tidyquant` package. This means that we can use the `xts` functions, but as part of a `tidyquant` function. This let's us do old school R finance stuff, but with a `tidy` flavor. So why learn the traditional way? `tidyquant` is very new and most of finance R still uses traditional `xts`.
 
 ---
 # Getting our data
@@ -61,7 +63,7 @@ library(PerformanceAnalytics)
 
 
 ```r
-etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+etf &lt;- read_csv(here::here("10-xts-basics", "data", "etf-reproducible-finance.csv"))
 ```
 
 ```
@@ -85,7 +87,7 @@ etf &lt;- read_csv("data/etf-reproducible-finance.csv")
 
 
 ```r
-ff &lt;- read_csv("data/ff_daily.csv")
+ff &lt;- read_csv(here::here("10-xts-basics", "data", "ff_daily.csv"))
 ```
 
 ```
@@ -100,7 +102,8 @@ ff &lt;- read_csv("data/ff_daily.csv")
 ```
 
 ```r
-ff &lt;- ff %&gt;% mutate(date = ymd(parse_date_time(date, "%Y%m%d")))
+ff &lt;- ff %&gt;% 
+  mutate(date = ymd(parse_date_time(date, "%Y%m%d")))
 ```
 
 -Let's also bring in some daily FF factor returns that I've already cleaned up for you. The `mutate` is to fix the date.
@@ -111,7 +114,7 @@ ff &lt;- ff %&gt;% mutate(date = ymd(parse_date_time(date, "%Y%m%d")))
 ---
 # Creating an xts object
 
-We have some times series data in R now. Let's tell R that we want it to treat this as an `xts` object. Easy - just use type coercion! There is also an `xts::xts` function that creates an `xts` object from scratch. You'll see this in the DataCamp module.
+We have some **times series** data in R now, but is is not an `xts` object. Let's tell R that we want it to treat this as an `xts` object. Easy - just use type coercion! There is also an `xts::xts` function that creates an `xts` object from scratch. You'll see this in the DataCamp module.
 
 
 ```r
@@ -127,7 +130,9 @@ class(etf)
 ff &lt;- as.xts(ff[,-1], order.by = ff$date)
 ```
 
-This code is saying take all columns but the first one and make these our time series. Then, take the **date** column and make that our **index**. Open up the `xts` object and you'll see that **date** is there, but it doesn't have a column name. It isn't a regular variable anymore!
+This code is saying take all columns but the first one and make these our time series. Then, take the **date** column and make that our **index**. Open up the `xts` object and you'll see that **date** is there, but it doesn't have a column name. It isn't a regular variable anymore! This is time series data, so the date is the most important part.
+
+Why create the `xts` object, rather than just keep the data as a `data frame` or `tibble`? By telling R that this an `xts` object, we can use special functions on it.
 
 ---
 # Subsetting xts data
@@ -334,18 +339,396 @@ first(rollapply(etf_daily_rets[, 4], 3, mean), "10 days")
 ## 2013-01-15 -0.002687668
 ```
 
+---
+class: inverse, center, middle
+
+# The tidyquant package
+(Finance the tidy-way)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
 
 ---
-# Next Up...
+# Intro to tidyquant
 
-- We'll have a relatively short lab this week. You can work on it in class on Thursday, as usual.
+The `tidyquant` package is mainted by [Matt Dancho](https://business-science.github.io/tidyquant/) and brings several different finance-specific R packages into one, `tidy`-friendly package. These packages include `zoo` and `xts` for manipulating time series data, `quantmod` to download and analyze returns, `ttr` for technical analysis, and `PerformanceAnalytics` for return attribution and risk measurement.
 
-- Don't forget the **DataCamp module due April 8th**. We have basically covered the content.
+This means that `tidyquant` wants long data (date and symbol are columns), rather than wide data (each symbol is its own column). It also has its own version of mutate and transmute, and plays well with `%&gt;%`s. 
 
-- We'll go back to `tidyquant` next. I also want to introduce you to more of the `PerformanceAnalytics` package. It is time to get into some "real" finance. 
+Here's the [CRAN page](https://cran.r-project.org/web/packages/tidyquant/index.html) and the [first vignette](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ00-introduction-to-tidyquant.html) for `tidyquant`.
 
-- **What topics would you like to see?** I'm thinking portfolio optimization and performance analysis. Maybe some fixed income and derivatives. Anything that seemed hard in Excel when you did it for an internship? Fancy finance stuff?
+You've already seen a few `tidyquant` functions in the labs, but let's go over a few more.
+
+---
+# tidyquant
+
+
+```r
+google &lt;- tq_get(x = "GOOG")
+names(google)
+```
+
+```
+## [1] "date"     "open"     "high"     "low"      "close"    "volume"   "adjusted"
+```
+
+```r
+head(google)
+```
+
+```
+## # A tibble: 6 x 7
+##   date        open  high   low close   volume adjusted
+##   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 2010-01-04  312.  314.  311.  312.  3927000     312.
+## 2 2010-01-05  312.  313.  310.  311.  6031900     311.
+## 3 2010-01-06  312.  312.  302.  303.  7987100     303.
+## 4 2010-01-07  304.  304.  295.  296. 12876600     296.
+## 5 2010-01-08  295.  300.  293.  300.  9483900     300.
+## 6 2010-01-11  301.  301.  296.  299. 14479800     299.
+```
+
+We have see `tq_get` already. Here we are just pulling one ticker. You can omitt the `x=` part and give a list of tickers instead. Try ?tq_get in the console to read more. 
+
+
+---
+# Data Sources in tidyquant
+
+
+```r
+tq_get_options()
+```
+
+```
+##  [1] "stock.prices"        "stock.prices.google" "stock.prices.japan" 
+##  [4] "financials"          "key.ratios"          "dividends"          
+##  [7] "splits"              "economic.data"       "exchange.rates"     
+## [10] "metal.prices"        "quandl"              "quandl.datatable"   
+## [13] "alphavantager"       "rblpapi"
+```
+
+Above are the data sources available to `tidyquant`. You can get a lot more than just stock prices.
+
+
+```r
+wti_price_usd &lt;- tq_get("DCOILWTICO", get = "economic.data")
+head(wti_price_usd, 3)
+```
+
+```
+## # A tibble: 3 x 3
+##   symbol     date       price
+##   &lt;chr&gt;      &lt;date&gt;     &lt;dbl&gt;
+## 1 DCOILWTICO 2010-01-01  NA  
+## 2 DCOILWTICO 2010-01-04  81.5
+## 3 DCOILWTICO 2010-01-05  81.7
+```
+
+---
+# Using tq_transmute
+
+`tq_transmute` is a powerful way to manipulate financial data. Here, we are taking the FANG data built-in to the `tidyquant` package, taking the adjusted close, and picking the last close of each month. Note that `transmute` drops everything but the columns used as part of the transmute. In this case, we are doing a `group_by(symbol)`, so the tickers are kept in the data. Do you see what `group_by()` does when used with `slice()`?
+
+
+```r
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    tq_transmute(select = adjusted, mutate_fun = to.monthly, indexAt = "lastof") %&gt;%
+    slice(1:2)
+```
+
+```
+## # A tibble: 8 x 3
+## # Groups:   symbol [4]
+##   symbol date       adjusted
+##   &lt;chr&gt;  &lt;date&gt;        &lt;dbl&gt;
+## 1 AMZN   2013-01-31    266. 
+## 2 AMZN   2013-02-28    264. 
+## 3 FB     2013-01-31     31.0
+## 4 FB     2013-02-28     27.2
+## 5 GOOG   2013-01-31    377. 
+## 6 GOOG   2013-02-28    400. 
+## 7 NFLX   2013-01-31     23.6
+## 8 NFLX   2013-02-28     26.9
+```
+
+---
+# Using tq_mutate
+
+`tq_mutate` will create a new variable and keep the existing ones in the tibble. There are many different built-in mutate functions. In this case, let's create a [MACD indicator](https://www.investopedia.com/terms/m/macd.asp) using the closing price. We can then rename the column from "MACD" to "Signal". I'm "slicing" the last row for each stock.
+
+
+```r
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    tq_mutate(select     = close, 
+              mutate_fun = MACD, 
+              col_rename = c("MACD", "Signal")) %&gt;%
+  slice(n())
+```
+
+```
+## # A tibble: 4 x 10
+## # Groups:   symbol [4]
+##   symbol date        open  high   low close   volume adjusted   MACD Signal
+##   &lt;chr&gt;  &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1 AMZN   2016-12-30  766.  767.  748.  750.  4125300     750. -0.246 -0.226
+## 2 FB     2016-12-30  117.  117.  115.  115. 18600100     115. -0.959 -0.800
+## 3 GOOG   2016-12-30  783.  783.  770.  772.  1760200     772.  0.384  0.614
+## 4 NFLX   2016-12-30  126.  127.  124.  124.  4426500     124.  1.46   1.67
+```
+
+---
+# Calculating returns
+
+We can pull stock prices and calculate returns using `tidyverse` functions. For example, we can easily calculate weekly returns from prices.
+
+
+```r
+fb_returns &lt;- tq_get("FB", get  = "stock.prices", from = "2016-01-01", 
+                     to   = "2016-12-31") %&gt;%
+    tq_transmute(adjusted, periodReturn, period = "weekly", 
+                 col_rename = "fb.returns")
+
+xlk_returns &lt;- tq_get("XLK", from = "2016-01-01", 
+                      to = "2016-12-31") %&gt;%
+    tq_transmute(adjusted, periodReturn, period = "weekly", 
+                 col_rename = "xlk.returns")
+
+returns_combined &lt;- left_join(fb_returns, xlk_returns, by = "date")
+
+head(returns_combined,3)
+```
+
+```
+## # A tibble: 3 x 3
+##   date       fb.returns xlk.returns
+##   &lt;date&gt;          &lt;dbl&gt;       &lt;dbl&gt;
+## 1 2016-01-08    -0.0478     -0.0516
+## 2 2016-01-15    -0.0242     -0.0187
+## 3 2016-01-22     0.0313      0.0264
+```
+
+---
+# Graphing with tidyquant
+
+```r
+AAPL &lt;- tq_get("AAPL", get = "stock.prices", from = "2018-09-01", to = "2020-03-30")
+
+end &lt;- as_date("2020-03-30")
+```
+
+Let's get some individual stock price set up. We'll use the `end`, a variable with a single date, when making our graphs.
+
+---
+# Graphing with tidyquant (cont.)
+
+
+```r
+AAPL %&gt;%
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(ma_fun = SMA, n = 50, linetype = 5, size = 1.25) +
+    geom_ma(ma_fun = SMA, n = 200, color = "red", size = 1.25) + 
+    labs(title = "AAPL Candlestick Chart", 
+         subtitle = "50 and 200-Day SMA", 
+         y = "Closing Price", x = "") + 
+    coord_x_date(xlim = c(end - weeks(52), end),
+                 ylim = c(175, 350)) + 
+    theme_tq()
+```
+There are [many different ways to graph](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) in `tidyquant`. These methods extend `ggplot` and include things like `geom_candlestick` and `geom_ma`, shown above.
+
+---
+# Graphing with tidyquant (cont.)
+
+&lt;img src="10-xts-basics_files/figure-html/unnamed-chunk-26-1.png" style="display: block; margin: auto;" /&gt;
+
+
+
+---
+
+class: inverse, center, middle
+
+# An example using tidyquant concepts
+(Summer VIX from Reproducible Finance)
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#EB811B' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# The VIX and the S&amp;P 500
+
+Let's follow along with an example from the [Reproducible Finance blog](http://www.reproduciblefinance.com/2019/08/06/summer-vix/), where we replicates part of a paper from folks at the hedge fund AQR. The paper looks at the relationship between the VIX and the S&amp;P 500. Seems relevant today! Back when this paper was written (2017), the VIX was very low. See the blog post for more on what the VIX is actually measuring.
+
+**Our goal - follow along with the code**, as if you're reading something in a foreign language that you're studying. You are going to see things that you don't know yet. Make a note, see if you can figure out what it is doing, and then look it up. 
+
+This is the **Part 2** example posted on Moodle. The earlier **Part 1** code is from before `tidayquant` was developed and uses another package called `quantmod`, which deals with `xts` objects, rather than `tibbles`.
+
+As the author notes, by using certain functions, we can stay in the `tidyquant` world, instead of the `xts` world.
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+
+```r
+symbols &lt;- c("^GSPC", "^VIX")
+```
+
+- Put the two tickers into a "vector" of characters. You could have number of tickers and use `c` to combine them together. This is better than putting the tickers directly into the function that downloads the data.
+
+
+```r
+prices_tq &lt;- 
+  symbols %&gt;% 
+  tq_get(get = "stock.prices", from = "1990-01-01")
+```
+
+- We get our returns the usual way using `tq_get` from the `tidyquant` package.
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+
+```r
+sp500_vix_rolling_vol &lt;- 
+  prices_tq %&gt;%  
+  select(symbol, date, close) %&gt;% 
+  pivot_wider(names_from = symbol, values_from = close) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(sp500_returns = gspc/lag(gspc, 1) - 1,
+         sp500_roll_20 = RcppRoll::roll_sd(sp500_returns, 20, 
+                                           fill = NA, align = "right"),
+         sp500_roll_20_annualized = 
+           (round((sqrt(252) * sp500_roll_20 * 100), 2))) %&gt;% 
+  na.omit()
+```
+
+- We want to calculate the rolling standard deviation of the S&amp;P 500. This means calculating the standard deviation from a moving window, in this case 20 days. So, at every point in time, take the last 20 days worth of returns and find the standard deviation. Then, move forward a day and do it again.
+
+- We start by taking the price data and keeping just the things we need: symbol, date, and the closing price. We `pivot_wider` to have each symbol be its own column of prices. I use `pivot_wider`, rather than `spread`, as this is what we've been using in class. They get you to the same place.
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+```r
+sp500_vix_rolling_vol &lt;- 
+  prices_tq %&gt;%  
+  select(symbol, date, close) %&gt;% 
+  pivot_wider(names_from = symbol, values_from = close) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(sp500_returns = gspc/lag(gspc, 1) - 1,
+         sp500_roll_20 = RcppRoll::roll_sd(sp500_returns, 20, 
+                                           fill = NA, align = "right"),
+         sp500_roll_20_annualized = 
+           (round((sqrt(252) * sp500_roll_20 * 100), 2))) %&gt;% 
+  na.omit()
+```
+
+- `janitor::clean_names()` cleans up the column/variable names (e.g. adding _ between words). Very useful!
+
+- Now the important part. Each symbol is its own column now. We can calculate returns doing (price t)/(price t-1) - 1. R makes this easy - **gspc** is the S&amp;P 500 ticker and is a **vector** of prices. Rather than create a loop, R lets us take the entire vector and divide each item in the vector by the previous item in the vector. This is what the `lag` function is doing. This is a nice example of what is called **vectorization** - you can just refer to the entire vector (i.e. column of prices) and do something to every item in it.
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+```r
+sp500_vix_rolling_vol &lt;- 
+  prices_tq %&gt;%  
+  select(symbol, date, close) %&gt;% 
+  pivot_wider(names_from = symbol, values_from = close) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(sp500_returns = gspc/lag(gspc, 1) - 1,
+         sp500_roll_20 = RcppRoll::roll_sd(sp500_returns, 20, 
+                                           fill = NA, align = "right"),
+         sp500_roll_20_annualized = 
+           (round((sqrt(252) * sp500_roll_20 * 100), 2))) %&gt;% 
+  na.omit()
+```
+
+- The author is using `RcppRoll::roll_sd`, a very fast method.
+
+- The first argument of `RcppRoll::roll_sd` is the variable to use. The next is the size of the window (20 days). Note that when you calculate a rolling window, you are going to have observations where this is impossible, since there isn't enough data to calculate yet. We are filling in these observations with missing values (NA). Finally, the `align = "right"` argument tells the function to start with the current value (the furthest right) and then look backwards to calculate. We are going to have missing values until we get 20 days into the sample.
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+```r
+sp500_vix_rolling_vol &lt;- 
+  prices_tq %&gt;%  
+  select(symbol, date, close) %&gt;% 
+  pivot_wider(names_from = symbol, values_from = close) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(sp500_returns = gspc/lag(gspc, 1) - 1,
+         sp500_roll_20 = RcppRoll::roll_sd(sp500_returns, 20, 
+                                           fill = NA, align = "right"),
+         sp500_roll_20_annualized = 
+           (round((sqrt(252) * sp500_roll_20 * 100), 2))) %&gt;% 
+  na.omit()
+```
+
+- We can do an approximate annualizing of standard deviations (volatility in finance-speak) by taking the daily standard deviation and multiplying by the square root of the number of trading days in a year. He then multiplies by 100 so that 25 can be interpreted as 25%. The `round()` function gets rid of all of the decimal places that we don't need.
+
+- Finally, he drops those initial observations where the window isn't long enough yet to calculate the rolling standard deviation.
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+```r
+sp500_vix_rolling_vol %&gt;% 
+  filter(date &gt;= Sys.Date() - months(3)) %&gt;% 
+  ggplot(aes(x = sp500_roll_20_annualized, y = vix)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method='lm', se = FALSE, color = "pink", size = .5) +
+  ggtitle("Vix versus 20-Day Realized Vol") +
+  xlab("Realized vol preceding 20 trading days") +
+  ylab("Vix") +
+  # Add a '%' sign to the axes without having to rescale.
+  scale_y_continuous(labels = function(x){ paste0(x, "%") }) +
+  scale_x_continuous(labels = function(x){ paste0(x, "%") }, 
+                     breaks = scales::pretty_breaks(n=10)) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+- The rest of the code is exploring the relationship between **realized volatility**, the measure that we just calculated, and the **VIX**. This graph only shows the data for the last three months - `filter(date &gt;= Sys.Date() - months(3))`. 
+
+- I dropped the `group_by`, as I don't see what it is doing and it slows things down.
+
+- `function(x){ paste0(x, "%") }` is an example of a more advanced concept called an **anonymous function**. It just lets you quickly define a function and use it right away.
+
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+&lt;img src="10-xts-basics_files/figure-html/unnamed-chunk-34-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# The VIX and the S&amp;P 500 (cont.)
+
+Finally, we can run a quick regression to formally test if the VIX is related to past realized volatility. We saw the relationship in the previous graph.
+
+
+```r
+reg &lt;- lm(vix ~ sp500_roll_20_annualized, data = sp500_vix_rolling_vol)
+summary(reg)
+```
+
+```
+## 
+## Call:
+## lm(formula = vix ~ sp500_roll_20_annualized, data = sp500_vix_rolling_vol)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.6952  -2.2727  -0.4516   1.9142  24.7186 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)              7.941697   0.080112   99.13   &lt;2e-16 ***
+## sp500_roll_20_annualized 0.744560   0.004472  166.48   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.719 on 7598 degrees of freedom
+## Multiple R-squared:  0.7848,	Adjusted R-squared:  0.7848 
+## F-statistic: 2.771e+04 on 1 and 7598 DF,  p-value: &lt; 2.2e-16
+```
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -355,16 +738,74 @@ first(rollapply(etf_daily_rets[, 4], 3, mean), "10 days")
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -378,7 +819,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

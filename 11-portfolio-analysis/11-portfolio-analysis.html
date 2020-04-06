@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 11: Intro to Portfolio Analysis</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -45,6 +45,7 @@ Open up your R Project for this class. You can do this under File:Open Project o
 
 
 ```r
+library(here)
 library(tidyverse)
 library(xts)
 library(MASS)
@@ -59,14 +60,13 @@ library(DEoptim)
 
 - Let's load in our general set of R packages. The last three are specifically for dealing with financial data and come with many different built-in tools. If one doesn't load, then that just means that you need to install it.
 
-- **Project Idea**: Explore different risk measures and portfolio optmization techniques. Use package features that we don't get to in class.
 
 ---
 # Getting our data
 
 
 ```r
-etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+etf &lt;- read_csv(here::here("11-portfolio-analysis", "data", "etf-reproducible-finance.csv"))
 ```
 
 ```
@@ -83,7 +83,7 @@ etf &lt;- read_csv("data/etf-reproducible-finance.csv")
 
 - Let's read in our ETF data that we looked at a while back. This data is in a traditional **time series** format, with each column representing a security. 
 
-- Your last DataCamp (due May 6th) discusses a variety of portfolio analysis tools.
+- Your last DataCamp module discusses a variety of portfolio analysis tools.
 
 
 ---
@@ -134,8 +134,8 @@ The `PortfolioAnalytics` package is going to want our returns in a `xts` object.
 
 ```r
   ggplot(etf, aes(sample = SPY)) +
-  stat_qq() + 
-  stat_qq_line()
+    stat_qq() + 
+    stat_qq_line()
 ```
 
 A QQ plot compares a sample to a theoretical distribution. In this example, if stock returns are normally distributied (i.e. exhibit no skewness or excess kurtosis), then returns should line up on the QQ line.
@@ -147,9 +147,9 @@ quantile(etf$SPY,probs=c(0.001, 0.01, 0.25, 0.50, 0.75, 0.99, 0.999))
 
 ```
 ##          0.1%            1%           25%           50%           75% 
-## -0.0353366498 -0.0214325257 -0.0027821939  0.0006314354  0.0046407744 
+## -0.0347174773 -0.0212044745 -0.0027783271  0.0006316348  0.0046515595 
 ##           99%         99.9% 
-##  0.0193581287  0.0252210031
+##  0.0195467134  0.0255417543
 ```
 
 
@@ -200,7 +200,8 @@ params_t &lt;- as.list(MASS::fitdistr(etf$SPY, "t")$estimate)
 
 ---
 # Finding parameters of a distribution (cont.)
-
+Note that the parameters are saved in the global environment as **lists**. Here's more from DataCamp on [data types in R](https://www.datacamp.com/community/tutorials/data-types-in-r). We've used the main four: vectors, matrices, data frames (tibbles), and lists.
+.code-small[
 
 ```r
 params_normal
@@ -208,11 +209,14 @@ params_normal
 
 ```
 ## $mean
-## [1] 0.0005819253
+## [1] 0.0006100607
 ## 
 ## $sd
-## [1] 0.007480572
+## [1] 0.007473388
 ```
+]
+
+.code-small[
 
 ```r
 params_t
@@ -220,14 +224,15 @@ params_t
 
 ```
 ## $m
-## [1] 0.0008187496
+## [1] 0.000820387
 ## 
 ## $s
-## [1] 0.005277866
+## [1] 0.005262814
 ## 
 ## $df
-## [1] 3.515251
+## [1] 3.469097
 ```
+]
 ---
 
 # A better QQ plot
@@ -245,7 +250,7 @@ ggplot(etf, aes(sample = SPY)) +
 
 # A better QQ plot (cont.)
 
-&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
 
 
 ---
@@ -332,11 +337,11 @@ cov(etf)
 
 ```
 ##               SPY           EFA           IJS          EEM           AGG
-## SPY  5.600348e-05  5.663246e-05  5.937921e-05 6.455518e-05 -2.572877e-06
-## EFA  5.663246e-05  8.141569e-05  6.055921e-05 8.430319e-05 -1.787818e-06
-## IJS  5.937921e-05  6.055921e-05  9.025904e-05 7.015678e-05 -3.714983e-06
-## EEM  6.455518e-05  8.430319e-05  7.015678e-05 1.340944e-04  3.274944e-07
-## AGG -2.572877e-06 -1.787818e-06 -3.714983e-06 3.274944e-07  4.135723e-06
+## SPY  5.589596e-05  5.635702e-05  5.924626e-05 6.437862e-05 -2.570665e-06
+## EFA  5.635702e-05  8.072904e-05  6.028077e-05 8.382423e-05 -1.766555e-06
+## IJS  5.924626e-05  6.028077e-05  9.020092e-05 6.995344e-05 -3.715021e-06
+## EEM  6.437862e-05  8.382423e-05  6.995344e-05 1.337950e-04  3.398055e-07
+## AGG -2.570665e-06 -1.766555e-06 -3.715021e-06 3.398055e-07  4.133273e-06
 ```
 
 ```r
@@ -353,7 +358,7 @@ cov_etf[1,1]
 ```
 
 ```
-## [1] 5.600348e-05
+## [1] 5.589596e-05
 ```
 
 The variance-covariance matrix is a crucial input into the portfolio optimization process. Make sure that you can interpret the numbers.
@@ -368,11 +373,11 @@ cor(etf)
 
 ```
 ##            SPY         EFA        IJS        EEM         AGG
-## SPY  1.0000000  0.83869468  0.8351828 0.74493468 -0.16905801
-## EFA  0.8386947  1.00000000  0.7064489 0.80683473 -0.09743018
-## IJS  0.8351828  0.70644895  1.0000000 0.63770365 -0.19228069
-## EEM  0.7449347  0.80683473  0.6377037 1.00000000  0.01390666
-## AGG -0.1690580 -0.09743018 -0.1922807 0.01390666  1.00000000
+## SPY  1.0000000  0.83896326  0.8343827 0.74444295 -0.16912515
+## EFA  0.8389633  1.00000000  0.7064126 0.80655623 -0.09670864
+## IJS  0.8343827  0.70641263  1.0000000 0.63677141 -0.19240161
+## EEM  0.7444430  0.80655623  0.6367714 1.00000000  0.01444985
+## AGG -0.1691252 -0.09670864 -0.1924016 0.01444985  1.00000000
 ```
 
 ```r
@@ -389,7 +394,7 @@ cor_etf[3,2] #3rd row, 2nd column
 ```
 
 ```
-## [1] 0.7064489
+## [1] 0.7064126
 ```
 
 ---
@@ -423,7 +428,7 @@ portfolio expected return for a given amount of risk.
   
 - Subject to different types of **constraints**, such as return targets, no shorting, and full investment.
   
-- You've seen this in Investments. You've maybe seen this in Excel using SOLVER. Let's use `PortfolioAnalytics` and have some fun.
+- You've seen this in Investments. You've maybe seen this in Excel using SOLVER. Let's use [PortfolioAnalytics package](https://cran.r-project.org/web/packages/PortfolioAnalytics/index.html) and have some fun.
 
 ---
 # PortfolioAnalytics
@@ -443,7 +448,7 @@ class(port_spec_ret)
 port_spec_ret &lt;- add.objective(portfolio = port_spec_ret, type = "risk", 
                                name = "StdDev")
 # Max return given constraint below
-port_spec_ret &lt;- add.objective(portfolio=port_spec_ret, type="return", name="mean")
+port_spec_ret &lt;- add.objective(portfolio=port_spec_ret, type = "return", name = "mean")
 
 #Weights sum to 1
 port_spec_ret &lt;- add.constraint(portfolio = port_spec_ret, type = "full_investment")
@@ -516,7 +521,7 @@ optimize.portfolio(R = etf, portfolio = port_spec_ret,
 ## 
 ## Optimal Weights:
 ##    SPY    EFA    IJS    EEM    AGG 
-## 0.8382 0.0000 0.0000 0.0000 0.1618 
+## 0.7933 0.0000 0.0000 0.0000 0.2067 
 ## 
 ## Objective Measure:
 ##  mean 
@@ -524,7 +529,7 @@ optimize.portfolio(R = etf, portfolio = port_spec_ret,
 ## 
 ## 
 ##   StdDev 
-## 0.006226
+## 0.005874
 ```
 
 ---
@@ -540,11 +545,11 @@ port_spec_random &lt;- portfolio.spec(colnames(etf)) #Declares a portfolio objec
 port_spec_random &lt;- add.objective(portfolio = port_spec_random, type = "risk",
                                   name = "StdDev")
 # Max return
-port_spec_random &lt;- add.objective(portfolio = port_spec_random, type="return", 
-                                  name="mean")
+port_spec_random &lt;- add.objective(portfolio = port_spec_random, type = "return", 
+                                  name = "mean")
 
 #Weights sum to 1, but with a little room for error given our method
-port_spec_random &lt;- add.constraint(portfolio = port_spec_random, type="weight_sum", 
+port_spec_random &lt;- add.constraint(portfolio = port_spec_random, type = "weight_sum", 
                                    min_sum = 0.99, max_sum = 1.01)
 #No shorting
 port_spec_random &lt;- add.constraint(portfolio = port_spec_random, type = "long_only")
@@ -561,6 +566,8 @@ opt_random &lt;- optimize.portfolio(etf, portfolio = port_spec_random,
 optimize_method = "random", trace = TRUE, search_size = 2000)
 ```
 
+Why do this? Rather than "solve" for the optimal, we'll just plot a bunch of portfolios and see which one is best. You'll see the efficient frontier as the upper-left edge of the random portfolios. This is the nice thing about computers - when you don't want to do a lot of fancy math, you can sometimes just produce thousands of random solutions and approximate the answer.
+
 ---
 # Optimization random portfolios
 
@@ -569,7 +576,7 @@ chart.RiskReward(opt_random, risk.col = "StdDev", return.col = "mean",
                 chart.assets = TRUE)
 ```
 
-&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-31-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-32-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Generate the efficient frontier
@@ -583,7 +590,7 @@ chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", tangent.line = TRUE,
                         type = "l" )
 ```
 
-&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-32-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-33-1.png" width="80%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Inspecting our object
@@ -658,19 +665,20 @@ chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", chart.assets = FALSE,
                         rf = 0.025)
 ```
 
-&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-35-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+&lt;img src="11-portfolio-analysis_files/figure-html/unnamed-chunk-36-1.png" width="80%" style="display: block; margin: auto;" /&gt;
 
 ---
 # Next Up...
 
 - **Think about project topics!** Maybe more advanced portfolio optimization? Something about risk management? Ever heard of shrinkage estimators? Bayesian techniques?
 
-- Don't forget the **DataCamp module due April 22nd and May 6th**. The first is on importing and exporting financial data and will get you your DataCamp badge. The last is on performance analysis and reviews many of the same concepts that we just discussed.
+- Don't forget our last two **DataCamp modules**!. The next is on importing and exporting financial data and will get you your DataCamp badge. The last is on performance analysis and reviews many of the same concepts that we just discussed.
 
 - We will keep going with `tidyquant`, `PerformanceAnalytics`, and `PortfolioAnalytics`. 
 
 - Let's also discuss **risk management** topics, such as value-at-risk and expected shortfall.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -680,16 +688,74 @@ chart.EfficientFrontier(meanvar_ef, match.col = "StdDev", chart.assets = FALSE,
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -703,7 +769,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Lecture 12: Risk Management</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -52,6 +52,7 @@ library(tidyquant)
 library(PerformanceAnalytics)
 library(PortfolioAnalytics)
 library(moments)
+library(here)
 ```
 
 - Let's load in our general set of R packages. The last three are specifically for dealing with financial data and come with many different built-in tools. If one doesn't load, then that just means that you need to install it.
@@ -65,7 +66,7 @@ library(moments)
 
 
 ```r
-etf &lt;- read_csv("data/etf-reproducible-finance.csv")
+etf &lt;- read_csv(here::here("12-risk", "data", "etf-reproducible-finance.csv"))
 ```
 
 ```
@@ -82,19 +83,19 @@ etf &lt;- read_csv("data/etf-reproducible-finance.csv")
 
 - Let's read in our ETF data that we looked at a while back. This data is in a traditional **time series** format, with each column representing a security. 
 
-- Your last DataCamp (due May 6th) discusses a variety of portfolio analysis tools.
+- Your last DataCamp discusses a variety of portfolio analysis tools.
 
 ---
 # Prices to returns
 
-Let's get this data frame of prices into an `xts` object of returns. Going to use log returns today.
+Let's get this data frame of prices into an `xts` object of returns. We are going to use log returns today.
 
 ```r
 etf &lt;- as.xts(etf[,-1], order.by = etf$date)
 etf &lt;- Return.calculate(etf, method = "log") %&gt;% na.omit()
 ```
 
-The `PortfolioAnalytics` package is going to want our returns in a `xts` object. Also note that we use **discrete** returns for portfolio optimization.
+The `PortfolioAnalytics` package is going to want our returns in a `xts` object. Also note that we use **discrete** returns for portfolio optimization. We are using **log** returns now to talk about risk.
 
 ---
 
@@ -259,6 +260,7 @@ ggplot(eem_large_losses, aes(x = Index, y = EEM)) +
 ```
 
 &lt;img src="12-risk_files/figure-html/unnamed-chunk-14-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
 ---
 # Return facts
 
@@ -380,7 +382,7 @@ VaR(etf$EEM, p = 0.95, method = "historical")
 
 - Tail VaR (TVaR), conditional VaR (CVaR) or **expected shortfall (ES)**
 - `\(\alpha\)`-ES is expected loss **given** that loss exceeds `\(\alpha\)`-VaR
-- This is the expected loss on a really bad day. It takes into account the returns to the left of the VaR, so it will exceed it.
+- This is the **expected** (or average) loss on a really bad day. It takes into account the returns to the left of the VaR, so it will exceed it.
 
 &lt;img src="12-risk_files/figure-html/unnamed-chunk-20-1.png" width="75%" style="display: block; margin: auto;" /&gt;
 
@@ -411,6 +413,7 @@ ES(etf$EEM, p = 0.95, method = "historical")
 
 Note that ES &gt; VaR. This is the **expected return** on a bad day, so it is the average of all of the returns to the left of the 95% VaR return.
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -420,16 +423,74 @@ Note that ES &gt; VaR. This is the **expected return** on a bad day, so it is th
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -443,7 +504,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

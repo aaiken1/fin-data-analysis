@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="" xml:lang="">
   <head>
     <title>Lecture 13: Logit Models</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Adam Aiken | Elon University" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
@@ -53,49 +53,50 @@ library(tidyverse)
 library(janitor)
 library(fastDummies)
 library(oddsratio)
+library(here)
 ```
 
 - Let's load in our general set of R packages from the `tidyverse`. We will be using the data found on Moodle from the DataCamp course on credit risk analysis. We'll use `fastDummies` to explore a little more about what factor variables are really doing.
 
-- See [here](https://stats.idre.ucla.edu/r/dae/logit-regression/) and [here](http://uc-r.github.io/logistic_regression) for more on logit models, the main topic of these notes.
+- See [here](https://stats.idre.ucla.edu/r/dae/logit-regression/) and [here](http://uc-r.github.io/logistic_regression) for more on logit models, the main topic of these notes. I have also posted some links on Moodle.
 
 
 ---
 # Getting our data
-We are going to look at credit card default data today. These outcomes are a **classification problem**. Default, yes or no, 1/0? This data is from the DataCamp module on credit risk analysis.
+We are going to look at credit card default data today. These outcomes are a **classification problem**. Default, yes or no, 1/0? This data is from the DataCamp module on credit risk analysis. Note that we are using `readRDS`, which let's us read in R Data, as opposed to more general .csv or .txt data.
 
 
 
 ```r
-loan_data &lt;- readRDS("data/loan_data.rds")
+loan_data &lt;- readRDS(here::here("13-logit", "data", "loan_data.rds"))
 summary(loan_data)
 ```
 
 ```
-##   loan_status       loan_amnt        int_rate     grade   
-##  Min.   :0.0000   Min.   :  500   Min.   : 5.42   A:9649  
-##  1st Qu.:0.0000   1st Qu.: 5000   1st Qu.: 7.90   B:9329  
-##  Median :0.0000   Median : 8000   Median :10.99   C:5748  
-##  Mean   :0.1109   Mean   : 9594   Mean   :11.00   D:3231  
-##  3rd Qu.:0.0000   3rd Qu.:12250   3rd Qu.:13.47   E: 868  
-##  Max.   :1.0000   Max.   :35000   Max.   :23.22   F: 211  
-##                                   NA's   :2776    G:  56  
-##    emp_length      home_ownership    annual_inc           age       
-##  Min.   : 0.000   MORTGAGE:12002   Min.   :   4000   Min.   : 20.0  
-##  1st Qu.: 2.000   OTHER   :   97   1st Qu.:  40000   1st Qu.: 23.0  
-##  Median : 4.000   OWN     : 2301   Median :  56424   Median : 26.0  
-##  Mean   : 6.145   RENT    :14692   Mean   :  67169   Mean   : 27.7  
-##  3rd Qu.: 8.000                    3rd Qu.:  80000   3rd Qu.: 30.0  
-##  Max.   :62.000                    Max.   :6000000   Max.   :144.0  
-##  NA's   :809
+##   loan_status       loan_amnt        int_rate     grade      emp_length    
+##  Min.   :0.0000   Min.   :  500   Min.   : 5.42   A:9649   Min.   : 0.000  
+##  1st Qu.:0.0000   1st Qu.: 5000   1st Qu.: 7.90   B:9329   1st Qu.: 2.000  
+##  Median :0.0000   Median : 8000   Median :10.99   C:5748   Median : 4.000  
+##  Mean   :0.1109   Mean   : 9594   Mean   :11.00   D:3231   Mean   : 6.145  
+##  3rd Qu.:0.0000   3rd Qu.:12250   3rd Qu.:13.47   E: 868   3rd Qu.: 8.000  
+##  Max.   :1.0000   Max.   :35000   Max.   :23.22   F: 211   Max.   :62.000  
+##                                   NA's   :2776    G:  56   NA's   :809     
+##   home_ownership    annual_inc           age       
+##  MORTGAGE:12002   Min.   :   4000   Min.   : 20.0  
+##  OTHER   :   97   1st Qu.:  40000   1st Qu.: 23.0  
+##  OWN     : 2301   Median :  56424   Median : 26.0  
+##  RENT    :14692   Mean   :  67169   Mean   : 27.7  
+##                   3rd Qu.:  80000   3rd Qu.: 30.0  
+##                   Max.   :6000000   Max.   :144.0  
+## 
 ```
 
 ---
 # Linear models for classification
 
-Logistic regression is a regression model where the response variable Y is **categorical**, as opposed to **continuous**. These types of models are used for **classification**. Why do we need a new model? We want a model that can give us **probabilities** for an event. Regular regression (OLS) isn't set up to do this.
+Logistic regression is a regression model where the response variable Y is **categorical**, as opposed to **continuous**. These types of models are used for **classification**. Why do we need a new model? We want a model that can give us **probabilities** for an event. Regular regression (ordinary least squares, or OLS) isn't set up to do this.
 
-I've plotted our categorical variable, *loan_status*, on the y-axis and *loan_amount* on the x-axis, and added a linear regression line. Negative loan status?
+I've plotted our categorical variable, *loan_status*, on the y-axis and *loan_amount* on the x-axis, and added a linear regression line. Loan Status = 1 means default. Negative loan status?
 
 
 ```r
@@ -477,6 +478,8 @@ ggplot(loan_data, aes(x = annual_inc, y = loan_status)) +
 ---
 # Let's fit a curve to this data - better!
 
+We are now using method = "glm" with family = "binomial". This is how to get `ggplot` to draw a curve from a logit model that fits our data. 
+
 
 ```r
 ggplot(loan_data, aes(x = annual_inc, y = loan_status)) + 
@@ -486,15 +489,15 @@ ggplot(loan_data, aes(x = annual_inc, y = loan_status)) +
 ```
 
 ```
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## `geom_smooth()` using formula 'y ~ x'
 ```
 
-&lt;img src="13-logit_files/figure-html/unnamed-chunk-5-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+&lt;img src="13-logit_files/figure-html/unnamed-chunk-5-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 # janitor::tabyll
 
-Let's use `janitor::tabyll` to look at our data a little more.
+Let's use `janitor::tabyll` to look at our data a little more. About 11% of our observations are in default. 1,181 of the loans in default have a mortgage.
 
 
 ```r
@@ -521,7 +524,8 @@ loan_data %&gt;% tabyl(loan_status, home_ownership)
 ---
 # janitor::tabyll (cont.)
 
-Use `adorn_` to add more information to the table.
+Use `adorn_` to add more information to the table. There are hundreds of ways to make tables in R, some are easier than others. This is a fast way to get some counts and percentages. Always check your data to see if things make sense!
+
 
 ```r
 loan_data %&gt;% tabyl(loan_status, home_ownership) %&gt;%
@@ -546,18 +550,14 @@ loan_data %&gt;% tabyl(loan_status, home_ownership) %&gt;%
 ---
 # Outliers
 
-We got one!
+We got one! Might want to drop outliers from our model. Or, even better, understand why they are there. Is it a data error?
 
 
 ```r
 ggplot(loan_data, aes(x = annual_inc)) + 
-  geom_histogram() + 
+  geom_histogram(bins = 50) + 
   geom_rug() +
   theme_minimal()
-```
-
-```
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
 &lt;img src="13-logit_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
@@ -669,7 +669,7 @@ loan_data_no_na_rows &lt;- fastDummies::dummy_cols(loan_data_no_na_rows,
 ---
 # Setting up factor variables (cont.)
 
-Let's look at our new variables.
+Let's look at our new variables. Interpret the mean of a 0/1 variable as a percent. So, 41% of the observations in our sample have a mortgage.
 
 .code-small[
 
@@ -728,7 +728,7 @@ We are going to use the `glm` function to model the outcome. The `glm` function 
 ---
 # What is a logit model? (cont.)
 
-In the background the glm uses maximum likelihood to fit the model. The basic intuition behind using maximum likelihood to fit a logistic regression model is as follows: 
+In the background, the glm uses **maximum likelihood** to fit the model. The basic intuition behind using maximum likelihood to fit a logistic regression model is as follows: 
 
 We seek estimates for `\(\beta_0\)` an `\(\beta_1\)` that get us a predicted probability of default for each individual, `\(p(x_i)\)`, corresponds as closely as possible to the individual’s actual observed default status. In other words, we plug in beta estimates until we get numbers "close" to 1 for those that default and "close" to zero for those that do not. This is done using what is called a **liklihood function**.
 
@@ -967,7 +967,7 @@ or_glm(data = loan_data_no_na_rows, model = log_model_2,
 ```
 ---
 # More than one variable (cont.)
-Logits can be tricker to interpret, as we've seen. Here's I am asking: If a person earns the mean annual income and they rent, what is the increase in the probability of default vs. not renting?
+Logits can be tricker to interpret, as we've seen. Here I am asking: If a person earns the mean annual income and they rent, what is the increase in the probability of default vs. not renting?
 
 
 ```r
@@ -1039,6 +1039,7 @@ summary(log_model_3)
 ```
 ]
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -1048,16 +1049,89 @@ summary(log_model_3)
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
-(function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -1071,7 +1145,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
